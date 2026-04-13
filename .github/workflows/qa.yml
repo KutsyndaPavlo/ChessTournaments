@@ -1,0 +1,69 @@
+name: Deploy to QA
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-qa
+  cancel-in-progress: true
+
+jobs:
+
+  build-backend:
+    uses: ./.github/workflows/_build-backend.yml
+    name: Build Backend
+    with:
+      environment: qa
+      run_publish: true
+      update_build_number: true
+
+  deploy-backend:
+    needs: build-backend
+    uses: ./.github/workflows/_deploy-backend.yml
+    name: Deploy Backend
+    with:
+      environment: qa
+    secrets: inherit
+
+  update_db:
+    needs: [deploy-backend]
+    uses: ./.github/workflows/_migrate-db.yml
+    name: Update Databases
+    with:
+      environment: qa
+    secrets: inherit
+
+  build-frontend:
+    needs: [build-backend]
+    name: Build Frontend
+    uses: ./.github/workflows/_build-frontend.yml
+    with:
+      environment: qa
+      upload_artifacts: true
+      update_build_number: true
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: build-frontend
+    uses: ./.github/workflows/_deploy-frontend.yml
+    with:
+      environment: qa
+    secrets: inherit
+
+  build-identity:
+    needs: [build-backend]
+    name: Build Identity App
+    uses: ./.github/workflows/_build-identity.yml
+    with:
+      environment: qa
+      upload_artifacts: true
+      update_build_number: true
+
+  deploy-identity:
+    name: Deploy Identity App
+    needs: build-identity
+    uses: ./.github/workflows/_deploy-identity.yml
+    with:
+      environment: qa
+    secrets: inherit

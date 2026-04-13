@@ -1,0 +1,36 @@
+name: Deploy Identity App
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (qa/production)"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: identity-build-${{ github.run_number }}
+          path: ./identity-app
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_IDENTITY_APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_IDENTITY_APP_PUBLISH_PROFILE }}
+          package: ./identity-app
+
+      - name: Azure Logout
+        if: always()
+        run: az logout
