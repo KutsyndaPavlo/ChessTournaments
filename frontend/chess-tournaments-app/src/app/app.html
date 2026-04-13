@@ -1,0 +1,69 @@
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="chess-icon-wrapper">
+          <span class="chess-icon">♔</span>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">{{ title() }}</h1>
+        </div>
+      </div>
+      <nav class="main-nav">
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+        >
+          Home
+        </a>
+        @if (isAuthenticated) {
+          <a routerLink="/tournaments" routerLinkActive="active" class="nav-link"> Tournaments </a>
+          @if (!isAdmin) {
+            <a routerLink="/my-matches" routerLinkActive="active" class="nav-link"> My Matches </a>
+            <a routerLink="/my-achievements" routerLinkActive="active" class="nav-link">
+              My Achievements
+            </a>
+            <a
+              routerLink="/tournament-requests/my-requests"
+              routerLinkActive="active"
+              class="nav-link"
+            >
+              My Requests
+            </a>
+          }
+          @if (isAdmin) {
+            <a routerLink="/matches/search" routerLinkActive="active" class="nav-link">
+              Search Matches
+            </a>
+            <a routerLink="/tournament-requests/admin" routerLinkActive="active" class="nav-link">
+              Pending Requests
+            </a>
+          }
+        }
+      </nav>
+      @if (isAuthenticated) {
+        <div class="header-actions">
+          <div class="user-info">
+            <span class="user-name">{{ userName }}</span>
+            @if (isAdmin) {
+              <span class="user-role-badge">Admin</span>
+            }
+          </div>
+          <button class="btn-logout" (click)="logout()">Logout</button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <main class="app-main">
+    <router-outlet />
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>♔ Chess Tournaments © {{ currentYear }}</p>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,31 @@
+/* Tournament Detail Styles */
+
+/* Chess-themed colors */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+.text-chess-primary {
+  color: var(--chess-tournaments-primary, #b8860b);
+}
+
+/* Progress bar for rounds (green) */
+:host ::ng-deep .progress-success .p-progressbar-value {
+  background-color: #22c55e;
+}
+
+/* Card header styling */
+:host ::ng-deep .p-card .p-card-title {
+  font-weight: 600;
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+/* Tabs styling */
+:host ::ng-deep .p-tabs .p-tablist-tab-list {
+  border-bottom: 2px solid rgba(184, 134, 11, 0.2);
+}
+
+:host ::ng-deep .p-tabs .p-tab.p-tab-active {
+  border-color: var(--chess-tournaments-primary, #b8860b);
+  color: var(--chess-tournaments-primary, #b8860b);
+}

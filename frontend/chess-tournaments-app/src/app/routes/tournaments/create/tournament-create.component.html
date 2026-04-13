@@ -1,0 +1,46 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="flex h-full flex-col gap-4 overflow-hidden p-4">
+  <!-- Header -->
+  <div class="flex w-full items-center justify-between">
+    <h1 class="text-2xl font-bold">Create Tournament</h1>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-auto">
+    <p-card>
+      @if (error()) {
+        <p-message severity="error" styleClass="mb-4 w-full">{{ error() }}</p-message>
+      }
+
+      @if (form(); as currentForm) {
+        <form [formGroup]="currentForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
+          <!-- Basic Information Section -->
+          <app-basic-info-section />
+
+          <!-- Tournament Settings Section -->
+          <app-tournament-settings-section
+            [formatOptions]="formatOptions()"
+            [timeControlOptions]="timeControlOptions()"
+          />
+
+          <!-- Player Settings Section -->
+          <app-player-settings-section />
+
+          <!-- Form Actions -->
+          <div class="flex justify-end gap-2 border-t pt-4">
+            <p-button label="Cancel" variant="text" (onClick)="cancel()" />
+            <p-button
+              type="submit"
+              label="Create Tournament"
+              icon="pi pi-check"
+              [loading]="loading()"
+              [disabled]="loading()"
+            />
+          </div>
+        </form>
+      }
+    </p-card>
+  </div>
+</div>

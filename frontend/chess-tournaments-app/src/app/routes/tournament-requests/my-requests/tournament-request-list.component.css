@@ -1,0 +1,17 @@
+/* Tournament Request List Styles */
+
+/* Chess-themed colors */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+.text-chess-primary {
+  color: var(--chess-tournaments-primary, #b8860b);
+}
+
+/* Table header styling */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--surface-100);
+  color: var(--chess-tournaments-heading, #1a1a2e);
+  font-weight: 600;
+}

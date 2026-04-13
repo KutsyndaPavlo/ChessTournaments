@@ -1,0 +1,24 @@
+/* Tournament Request Admin Styles */
+
+/* Chess-themed colors */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+.text-chess-primary {
+  color: var(--chess-tournaments-primary, #b8860b);
+}
+
+.bg-chess-primary {
+  background-color: var(--chess-tournaments-primary, #b8860b);
+}
+
+/* Card styling */
+:host ::ng-deep .p-card .p-card-content {
+  padding-top: 0;
+}
+
+/* Textarea full width */
+:host ::ng-deep .p-textarea {
+  width: 100%;
+}

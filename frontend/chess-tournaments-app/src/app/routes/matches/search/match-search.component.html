@@ -1,0 +1,182 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="mx-auto max-w-7xl px-4 py-6">
+  <h2 class="mb-6 text-2xl font-bold text-chess-heading">Search Matches</h2>
+
+  <!-- Search Form -->
+  <p-card class="mb-6">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="flex flex-col gap-2">
+        <label for="playerId" class="font-medium">Player ID</label>
+        <input
+          pInputText
+          id="playerId"
+          [ngModel]="searchPlayerId()"
+          (ngModelChange)="searchPlayerId.set($event)"
+          placeholder="Enter player ID"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="tags" class="font-medium">Tags (comma-separated)</label>
+        <input
+          pInputText
+          id="tags"
+          [ngModel]="searchTags()"
+          (ngModelChange)="searchTags.set($event)"
+          placeholder="e.g., upset, blunder"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="tournamentId" class="font-medium">Tournament ID</label>
+        <input
+          pInputText
+          id="tournamentId"
+          [ngModel]="searchTournamentId()"
+          (ngModelChange)="searchTournamentId.set($event)"
+          placeholder="Enter tournament ID"
+        />
+      </div>
+    </div>
+    <div class="mt-4 flex gap-2">
+      <p-button
+        label="Search"
+        icon="pi pi-search"
+        [loading]="loading()"
+        (onClick)="searchMatches()"
+      />
+      <p-button
+        label="Clear"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="clearSearch()"
+      />
+    </div>
+  </p-card>
+
+  <!-- Results Table -->
+  @if (matches().length > 0) {
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="px-4 py-3">
+          <h3 class="m-0 text-lg font-semibold">Search Results ({{ matches().length }} matches)</h3>
+        </div>
+      </ng-template>
+
+      <p-table
+        [value]="matches()"
+        [rowHover]="true"
+        [tableStyle]="{ 'min-width': '60rem' }"
+        class="p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 80px">Board</th>
+            <th>White</th>
+            <th>Black</th>
+            <th style="width: 100px" class="text-center">Result</th>
+            <th style="width: 100px" class="text-center">Status</th>
+            <th style="width: 200px">Tags</th>
+            <th style="width: 120px">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-match>
+          <tr>
+            <td class="font-medium">{{ match.boardNumber }}</td>
+            <td>{{ match.whitePlayerId }}</td>
+            <td>{{ match.blackPlayerId }}</td>
+            <td class="text-center">
+              <p-tag
+                [value]="getResultDisplay(match.result)"
+                [severity]="getResultSeverity(match.result)"
+              />
+            </td>
+            <td class="text-center">
+              @if (match.isCompleted) {
+                <p-tag value="Completed" severity="success" />
+              } @else {
+                <p-tag value="Ongoing" severity="warn" />
+              }
+            </td>
+            <td>
+              <div class="flex flex-wrap gap-1">
+                @for (tag of match.tags; track tag.id) {
+                  <p-chip
+                    [label]="tag.name"
+                    [removable]="true"
+                    (onRemove)="removeTag(match, tag.name)"
+                  />
+                }
+                @if (match.tags.length === 0) {
+                  <span class="text-gray-400">No tags</span>
+                }
+              </div>
+            </td>
+            <td>
+              <p-button
+                label="Add Tag"
+                icon="pi pi-tag"
+                size="small"
+                [outlined]="true"
+                (onClick)="openTagModal(match)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  } @else if (!loading()) {
+    <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-700">
+      <i class="pi pi-info-circle mr-2"></i>
+      Enter search criteria and click Search to find matches.
+    </div>
+  }
+</div>
+
+<!-- Add Tag Dialog -->
+<p-dialog
+  header="Add Tag to Match"
+  [(visible)]="showTagModal"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="!addingTag()"
+>
+  @if (selectedMatch()) {
+    <div class="mb-4">
+      <p class="text-gray-600">
+        <span class="font-semibold">Match:</span>
+        {{ selectedMatch()!.whitePlayerId }} vs {{ selectedMatch()!.blackPlayerId }}
+      </p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="newTagName" class="font-medium">Tag Name</label>
+      <input
+        pInputText
+        id="newTagName"
+        [ngModel]="newTagName()"
+        (ngModelChange)="newTagName.set($event)"
+        placeholder="Enter tag name"
+        maxlength="50"
+        class="w-full"
+      />
+      <small class="text-gray-500">Maximum 50 characters</small>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="addingTag()"
+      (onClick)="closeTagModal()"
+    />
+    <p-button
+      label="Add Tag"
+      icon="pi pi-tag"
+      [loading]="addingTag()"
+      [disabled]="!newTagName().trim()"
+      (onClick)="addTag()"
+    />
+  </ng-template>
+</p-dialog>

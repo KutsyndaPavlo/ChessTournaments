@@ -1,0 +1,220 @@
+@page "/Account/Register"
+@using ChessTournaments.Identity.Features.Registration.Contracts
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.WebUtilities
+@inject ISender Sender
+@inject NavigationManager NavigationManager
+@attribute [RequireAntiforgeryToken(required: false)]
+
+<PageTitle>Register</PageTitle>
+
+@if (_registrationSuccessful)
+{
+	<div class="d-flex justify-content-center align-items-center flex-column mt-5">
+		<div style="font-size: 4rem; margin-bottom: 1rem;">♔ ♕ ♖ ♗ ♘ ♙</div>
+		<h1 style="color: var(--chess-tournaments-heading); text-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+			Registration Successful!
+		</h1>
+		<p style="color: var(--chess-tournaments-muted); font-size: 1.2rem; margin-top: 0.5rem;">
+			Welcome to ChessTournaments! You can now <a href="@GetLoginUrl()">login</a> to your account.
+		</p>
+	</div>
+}
+else
+{
+	<div class="login-container row align-items-start justify-content-center" style="margin-top: 10%;">
+		<div class="chess-tournaments-card col-md-8" style="max-width: 500px;">
+			<div class="card-header">
+				<span class="card-title">Register New Account</span>
+			</div>
+			<div class="card-body">
+				<EditForm @ref="_theForm" Model="@RegisterRequest" FormName="RegisterForm" OnValidSubmit="@HandleRegistration">
+					<DataAnnotationsValidator />
+
+					<div class="mb-3">
+						<label for="username" class="form-label">Username</label>
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">♔</span>
+							<InputText id="username" placeholder="Username" class="form-control" @bind-Value="RegisterRequest.Username" />
+						</div>
+						<CustomValidationMessage For="@(() => RegisterRequest.Username)" />
+					</div>
+
+					<div class="mb-3">
+						<label for="email" class="form-label">Email</label>
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">✉</span>
+							<InputText id="email" placeholder="Email" type="email" class="form-control" @bind-Value="RegisterRequest.Email" />
+						</div>
+						<CustomValidationMessage For="@(() => RegisterRequest.Email)" />
+					</div>
+
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="firstName" class="form-label">First Name (Optional)</label>
+							<InputText id="firstName" placeholder="First Name" class="form-control" @bind-Value="RegisterRequest.FirstName" />
+							<CustomValidationMessage For="@(() => RegisterRequest.FirstName)" />
+						</div>
+
+						<div class="col-md-6 mb-3">
+							<label for="lastName" class="form-label">Last Name (Optional)</label>
+							<InputText id="lastName" placeholder="Last Name" class="form-control" @bind-Value="RegisterRequest.LastName" />
+							<CustomValidationMessage For="@(() => RegisterRequest.LastName)" />
+						</div>
+					</div>
+
+					<div class="mb-3">
+						<label for="password" class="form-label">Password</label>
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">♟</span>
+							<InputText id="password" placeholder="Password" type="password" class="form-control" @bind-Value="RegisterRequest.Password" />
+						</div>
+						<CustomValidationMessage For="@(() => RegisterRequest.Password)" />
+						<small class="form-text text-muted">Minimum 8 characters</small>
+					</div>
+
+					<div class="mb-3">
+						<label for="confirmPassword" class="form-label">Confirm Password</label>
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">♟</span>
+							<InputText id="confirmPassword" placeholder="Confirm Password" type="password" class="form-control" @bind-Value="RegisterRequest.ConfirmPassword" />
+						</div>
+						<CustomValidationMessage For="@(() => RegisterRequest.ConfirmPassword)" />
+					</div>
+
+					@if (_errorMessages.Count > 0)
+					{
+						<div class="alert alert-danger mt-3">
+							@foreach (var message in _errorMessages)
+							{
+								<div>- @message</div>
+							}
+						</div>
+					}
+
+					<div class="d-flex gap-2 mt-4">
+						<button type="submit" class="btn btn-primary" disabled="@_isLoading">
+							@if (_isLoading)
+							{
+								<span>Creating Account...</span>
+							}
+							else
+							{
+								<span>Register</span>
+							}
+						</button>
+						<a href="@GetLoginUrl()" class="btn btn-secondary">Back to Login</a>
+					</div>
+				</EditForm>
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	[SupplyParameterFromForm]
+	private RegisterRequest RegisterRequest { get; set; } = new();
+
+	private string? _queryString;
+	private List<string> _errorMessages = [];
+	private bool _registrationSuccessful;
+	private bool _isLoading;
+	private EditForm? _theForm;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		_queryString = new Uri(NavigationManager.Uri).Query;
+	}
+
+	private async Task HandleRegistration()
+	{
+		_isLoading = true;
+		_errorMessages.Clear();
+
+		if (_theForm?.EditContext is null)
+		{
+			_isLoading = false;
+			return;
+		}
+
+		var isValid = _theForm.EditContext.Validate();
+
+		if (!isValid)
+		{
+			_isLoading = false;
+			return;
+		}
+
+		Result<RegisterResponse>? registerResponse = null;
+
+		try
+		{
+			var command = new Register.Command(
+				RegisterRequest.Username,
+				RegisterRequest.Email,
+				RegisterRequest.Password,
+				RegisterRequest.ConfirmPassword,
+				RegisterRequest.FirstName,
+				RegisterRequest.LastName);
+
+			registerResponse = await Sender.Send(command);
+		}
+		catch (Exception)
+		{
+			_errorMessages = ["An error occurred during registration."];
+		}
+
+		if (registerResponse != null)
+		{
+			if (registerResponse.IsSuccess)
+			{
+				var response = registerResponse.Value;
+
+				switch (response.Status)
+				{
+					case RegistrationStatus.Succeeded:
+						_registrationSuccessful = true;
+						RegisterRequest = new RegisterRequest();
+						break;
+
+					case RegistrationStatus.UserAlreadyExists:
+						_errorMessages = [response.Message ?? "Username or email already exists"];
+						break;
+
+					case RegistrationStatus.ValidationError:
+						_errorMessages = response.Errors?.ToList() ?? [response.Message ?? "Validation failed"];
+						break;
+
+					case RegistrationStatus.Failed:
+						_errorMessages = [response.Message ?? "Registration failed"];
+						break;
+				}
+			}
+			else
+			{
+				var message = registerResponse.Error.Message;
+				_errorMessages = message
+					.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+					.Select(m => m.Trim())
+					.Where(m => m.Length > 0)
+					.Distinct()
+					.ToList();
+			}
+		}
+
+		_isLoading = false;
+	}
+
+	private string GetLoginUrl()
+	{
+		var returnUrl = GetReturnUrl();
+		return string.IsNullOrEmpty(returnUrl) ? "/Account/Login" : $"/Account/Login?returnUrl={returnUrl}";
+	}
+
+	private string? GetReturnUrl()
+	{
+		QueryHelpers.ParseQuery(_queryString).TryGetValue("returnUrl", out var returnUrl);
+		return returnUrl;
+	}
+}

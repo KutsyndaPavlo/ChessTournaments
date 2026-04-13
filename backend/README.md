@@ -1,0 +1,2 @@
+- **[Migrations Guide](backend/MIGRATIONS_GUIDE.md)** - Database migration commands and best practices
+  - [Migrations Guide](backend/MIGRATIONS_GUIDE.md)

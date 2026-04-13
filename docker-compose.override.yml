@@ -1,0 +1,19 @@
+# Override file for local development
+# This file is automatically merged with docker-compose.yml when running docker compose up
+
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Serilog__WriteTo__0__Name=Seq
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:80
+    volumes:
+      - ./backend/src/ChessTournaments.API/appsettings.Development.json:/app/appsettings.Development.json:ro
+
+  identity:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Serilog__WriteTo__0__Name=Seq
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:80
+    volumes:
+      - ./backend/src/ChessTournaments.Identity/appsettings.Development.json:/app/appsettings.Development.json:ro

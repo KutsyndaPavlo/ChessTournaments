@@ -1,0 +1,30 @@
+/* Chess Tournaments - Color Tokens */
+
+:root {
+  /* Chess-themed color palette - Light theme */
+  --chess-tournaments-card-bg: rgba(255, 255, 255, 0.95);
+  --chess-tournaments-border: rgba(184, 134, 11, 0.3);
+  --chess-tournaments-heading: #2c2416;
+  --chess-tournaments-text: #3d3426;
+  --chess-tournaments-muted: #6b5e4d;
+  --chess-tournaments-input-bg: #fafaf8;
+  --chess-tournaments-input-text: #2c2416;
+  --chess-tournaments-input-placeholder: #9e8f7b;
+  --chess-tournaments-input-border: #d4a574;
+  --chess-tournaments-focus: #b8860b;
+  --chess-tournaments-focus-ring: rgba(184, 134, 11, 0.2);
+  --chess-tournaments-primary: #b8860b;
+  --chess-tournaments-primary-hover: #9a7009;
+  --chess-tournaments-primary-active: #7a5807;
+  --chess-tournaments-primary-disabled: #d4c4a8;
+  --chess-tournaments-on-primary: #ffffff;
+  --chess-tournaments-link: #9a7009;
+  --chess-tournaments-link-hover: #7a5807;
+  --chess-tournaments-success: #2e7d32;
+  --chess-tournaments-error: #d32f2f;
+  --chess-tournaments-warning: #f57c00;
+
+  /* Chess board colors */
+  --chess-light-square: #f0d9b5;
+  --chess-dark-square: #b58863;
+}

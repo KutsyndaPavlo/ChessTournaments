@@ -1,0 +1,242 @@
+@page "/"
+@page "/Account/Login"
+@using ChessTournaments.Identity.Configurations
+@using ChessTournaments.Identity.Features.Login.Contracts
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Options
+@using System.Net
+@inject IOptions<AccountSettings> AccountOptions
+@inject IOptions<ExternalLoginMicrosoftSettings> ExternalLoginMicrosoftOptions
+@inject ISender Sender
+@inject NavigationManager NavigationManager
+@attribute [RequireAntiforgeryToken(required: false)]
+
+<PageTitle>Login</PageTitle>
+
+@if (_isAuthorized)
+{
+	<div class="d-flex justify-content-center align-items-center flex-column mt-5">
+		<div style="font-size: 4rem; margin-bottom: 1rem;">♔ ♕ ♖ ♗ ♘ ♙</div>
+		<h1 style="color: var(--chess-tournaments-heading); text-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+			Welcome to ChessTournaments!
+		</h1>
+		<p style="color: var(--chess-tournaments-muted); font-size: 1.2rem; margin-top: 0.5rem;">
+			You has been authenticated
+		</p>
+	</div>
+}
+else
+{
+	<div class="login-container row align-items-start justify-content-center gap-5" style="margin-top: 15%;">
+		<div class="chess-tournaments-card col-md-6" style="max-width: 400px;">
+			<div class="card-header">
+				<span class="card-title">Login</span>
+			</div>
+			<div class="card-body">
+				<EditForm @ref="_theForm" Model="@LoginRequest" FormName="LoginForm" OnValidSubmit="@HandleLogin">
+					<DataAnnotationsValidator />
+
+					<div class="mb-3">
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">♔</span>
+							<InputText id="username" placeholder="Username" class="form-control" @bind-Value="LoginRequest.Username" />
+						</div>
+						<CustomValidationMessage For="@(() => LoginRequest.Username)" />
+					</div>
+
+					<div class="mb-3">
+						<div class="input-group">
+							<span class="input-group-text" style="font-size: 1.2rem;">♟</span>
+							<InputText id="password" placeholder="Password" type="password" class="form-control" @bind-Value="LoginRequest.Password" />
+						</div>
+						<CustomValidationMessage For="@(() => LoginRequest.Password)" />
+					</div>
+
+					<div class="mb-3 d-flex justify-content-end">
+						<a href="@GetRegisterUrl()" class="form-check-label">Create account</a>
+					</div>
+
+					@if (AccountOptions.Value.AllowRememberLogin)
+					{
+						<div class="mb-3 form-check">
+							<InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="LoginRequest.RememberMe" />
+							<label class="form-check-label" for="rememberMe">Remember me</label>
+						</div>
+					}
+
+
+					@if (_errorMessages.Count > 0)
+					{
+						<div class="alert alert-danger mt-1">
+							@foreach (var message in _errorMessages)
+							{
+								<div>- @message</div>
+							}
+						</div>
+					}
+
+					@if (!string.IsNullOrEmpty(_successMessage))
+					{
+						<div class="alert alert-success">@_successMessage</div>
+					}
+
+					<div class="d-flex">
+						<button type="submit" class="btn btn-primary login-confirm" disabled="@_isLoading">
+							@if (_isLoading)
+							{
+								<span>Loading...</span>
+							}
+							else
+							{
+								<span>Login</span>
+							}
+						</button>
+					</div>
+				</EditForm>
+			</div>
+		</div>
+		@if (ExternalLoginMicrosoftOptions.Value.Enabled)
+		{
+			<div class="chess-tournaments-card col-md-6" style="max-width: 500px;">
+				<div class="card-header">
+					<span class="card-title">External Account</span>
+				</div>
+				<div class="card-body">
+					<ul class="list-inline">
+						<li class="list-inline-item">
+							<a class="btn btn-secondary" href="/External/Challenge?scheme=Microsoft&returnUrl=@GetReturnUrl()">
+								Microsoft
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				@if (!string.IsNullOrWhiteSpace(_externalLoginError))
+				{
+					<div class="alert alert-danger mt-1">
+						<div>@_externalLoginError</div>
+					</div>
+				}
+			</div>
+		}
+	</div>
+}
+
+@code {
+	[SupplyParameterFromForm]
+	private LoginRequest LoginRequest { get; set; } = new();
+
+	private string? _queryString;
+	private List<string> _errorMessages = [];
+	private string? _externalLoginError;
+	private string? _successMessage;
+	private bool _isAuthorized;
+	private bool _isLoading;
+	private EditForm? _theForm;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		_queryString = new Uri(NavigationManager.Uri).Query;
+		SetExternalLoginErrorMessageIfExist();
+	}
+
+	private async Task HandleLogin()
+	{
+		_isLoading = true;
+		_successMessage = null;
+		_errorMessages.Clear();
+
+		if (_theForm?.EditContext is null)
+		{
+			_isLoading = true;
+			return;
+		}
+
+		var isValid = _theForm.EditContext.Validate();
+
+		if (!isValid)
+		{
+			_isLoading = false;
+			return;
+		}
+
+		Result<LoginResponse>? loginResponse = null;
+
+		try
+		{
+			var command = new Login.Command(LoginRequest.Username, LoginRequest.Password, LoginRequest.RememberMe);
+			loginResponse = await Sender.Send(command);
+		}
+		catch (Exception)
+		{
+			_successMessage = string.Empty;
+			_errorMessages = ["An error occurred during login."];
+		}
+
+		if (loginResponse != null)
+		{
+			if (loginResponse.IsSuccess)
+			{
+				var response = loginResponse.Value;
+				var username = LoginRequest.Username;
+				LoginRequest = new LoginRequest();
+
+				_successMessage = response.Message ?? "Login successful! Welcome " + username + ".";
+				_errorMessages = [];
+				_isAuthorized = true;
+
+				var returnUrl = GetReturnUrl();
+				if (!string.IsNullOrEmpty(returnUrl))
+				{
+					NavigationManager.NavigateTo(returnUrl);
+				}
+			}
+			else
+			{
+				var message = loginResponse.Error.Message;
+				_errorMessages = message
+					.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+					.Select(m => m.Trim())
+					.Where(m => m.Length > 0)
+					.Distinct()
+					.ToList();
+				_successMessage = string.Empty;
+			}
+		}
+
+		_isLoading = false;
+	}
+
+	private string? GetReturnUrl()
+	{
+		QueryHelpers.ParseQuery(_queryString).TryGetValue("returnUrl", out var returnUrl);
+		return returnUrl;
+	}
+
+	private string GetRegisterUrl() => $"/Account/Register{_queryString}";
+
+	private void SetExternalLoginErrorMessageIfExist()
+	{
+		if (string.IsNullOrWhiteSpace(_queryString))
+		{
+			return;
+		}
+
+		var encodedErrorField = WebUtility.UrlEncode("elError=");
+		if (!_queryString.Contains(encodedErrorField))
+		{
+			return;
+		}
+
+		var encodedError = _queryString.Split(WebUtility.UrlEncode("&")).FirstOrDefault(x => x.Contains(encodedErrorField));
+		if (string.IsNullOrWhiteSpace(encodedError))
+		{
+			return;
+		}
+
+		_queryString = _queryString.Replace(encodedError, string.Empty);
+		_externalLoginError = WebUtility.UrlDecode(WebUtility.UrlDecode(encodedError.Replace(encodedErrorField, string.Empty)));
+	}
+}

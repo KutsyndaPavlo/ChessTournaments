@@ -1,0 +1,56 @@
+/* Tournament Rounds Styles */
+
+/* Chess-themed colors */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+.text-chess-primary {
+  color: var(--chess-tournaments-primary, #b8860b);
+}
+
+/* Panel styling */
+:host ::ng-deep .p-panel {
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+:host ::ng-deep .p-panel:hover {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .p-panel .p-panel-header {
+  padding: 1rem 1.25rem;
+}
+
+:host ::ng-deep .p-panel .p-panel-title {
+  font-weight: 600;
+}
+
+/* Card header styling */
+:host ::ng-deep .p-card .p-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+/* Table styling */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Dialog styling */
+:host ::ng-deep .p-dialog .p-dialog-header {
+  padding: 1.25rem;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  padding: 0 1.25rem 1.25rem;
+}
+
+/* Textarea full width */
+:host ::ng-deep textarea.p-inputtextarea {
+  width: 100%;
+}

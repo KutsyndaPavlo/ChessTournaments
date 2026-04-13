@@ -1,0 +1,72 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Chess-themed header */
+.chess-header {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(45, 45, 45, 0.9));
+    border-bottom: 3px solid var(--chess-tournaments-border);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 10;
+}
+
+.chess-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chess-pieces {
+    font-size: 2.5rem;
+    color: var(--chess-tournaments-primary);
+    text-shadow: 0 2px 8px rgba(184, 134, 11, 0.5);
+}
+
+.chess-title {
+    color: var(--chess-tournaments-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+main {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.content {
+    padding: 1rem;
+}
+
+/* Blazor Error UI - Chess themed */
+#blazor-error-ui {
+    background: linear-gradient(135deg, #8B0000, #B22222);
+    color: #F5E6D3;
+    border-top: 2px solid #FFD700;
+    bottom: 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }

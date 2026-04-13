@@ -1,0 +1,122 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="p-4">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold text-chess-heading">My Tournament Requests</h2>
+    <p-button
+      label="Request to Join Tournament"
+      icon="pi pi-plus-circle"
+      routerLink="/tournament-requests/create"
+    />
+  </div>
+
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex justify-center py-8">
+      <p-progressBar mode="indeterminate" [style]="{ height: '6px', width: '200px' }" />
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+      You haven't submitted any tournament requests yet.
+      <a
+        routerLink="/tournament-requests/create"
+        class="text-blue-800 underline hover:text-blue-900"
+      >
+        Request to join a tournament
+      </a>
+      to get started.
+    </div>
+  } @else {
+    <p-table
+      [value]="requests()"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      class="p-datatable-striped"
+      [rowHover]="true"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Tournament</th>
+          <th>Location</th>
+          <th>Start Date</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-request>
+        <tr>
+          <td>
+            @if (request.tournament) {
+              <span class="font-semibold">{{ request.tournament.name }}</span>
+              @if (request.tournament.description) {
+                <br />
+                <small class="text-gray-500">{{ request.tournament.description }}</small>
+              }
+            } @else {
+              <span class="text-gray-500">Tournament ID: {{ request.tournamentId }}</span>
+            }
+          </td>
+          <td>
+            @if (request.tournament) {
+              {{ request.tournament.location }}
+            } @else {
+              <span class="text-gray-400">-</span>
+            }
+          </td>
+          <td>
+            @if (request.tournament) {
+              {{ request.tournament.startDate | date: 'short' }}
+            } @else {
+              <span class="text-gray-400">-</span>
+            }
+          </td>
+          <td>
+            <p-tag
+              [value]="getStatusDisplay(request.status)"
+              [severity]="getStatusSeverity(request.status)"
+            />
+            @if (request.status === RequestStatus.Approved && request.tournamentId) {
+              <br />
+              <a
+                [routerLink]="['/tournaments', request.tournamentId]"
+                class="text-sm text-chess-primary hover:underline mt-1 inline-block"
+              >
+                <i class="pi pi-external-link mr-1"></i>View Tournament
+              </a>
+            }
+            @if (request.status === RequestStatus.Rejected && request.rejectionReason) {
+              <br />
+              <small class="text-red-500">Reason: {{ request.rejectionReason }}</small>
+            }
+          </td>
+          <td>{{ request.createdAt | date: 'short' }}</td>
+          <td>
+            @if (canCancel(request)) {
+              <p-button
+                label="Cancel"
+                icon="pi pi-times-circle"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (click)="cancelRequest(request.id)"
+              />
+            } @else {
+              <span class="text-gray-400">-</span>
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="text-center py-8 text-gray-500">No tournament requests found.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

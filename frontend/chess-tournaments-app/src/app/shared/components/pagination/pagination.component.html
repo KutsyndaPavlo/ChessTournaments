@@ -1,0 +1,91 @@
+<nav aria-label="Pagination" class="pagination-container" *ngIf="totalPages > 0">
+  <div class="pagination-info">
+    <span class="text-muted">
+      Showing {{ rangeStart() }} to {{ rangeEnd() }} of {{ totalCount }} results
+    </span>
+  </div>
+
+  <div class="pagination-controls">
+    <div class="page-size-selector" *ngIf="showPageSize">
+      <label for="pageSize" class="form-label me-2">Items per page:</label>
+      <select
+        id="pageSize"
+        class="form-select form-select-sm"
+        [value]="pageSize"
+        (change)="onPageSizeChange($event)"
+      >
+        <option *ngFor="let option of pageSizeOptions" [value]="option">
+          {{ option }}
+        </option>
+      </select>
+    </div>
+
+    <ul class="pagination mb-0">
+      <!-- First page -->
+      <li class="page-item" [class.disabled]="!hasPreviousPage()">
+        <button
+          class="page-link"
+          (click)="goToFirst()"
+          [disabled]="!hasPreviousPage()"
+          aria-label="First"
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </button>
+      </li>
+
+      <!-- Previous page -->
+      <li class="page-item" [class.disabled]="!hasPreviousPage()">
+        <button
+          class="page-link"
+          (click)="goToPrevious()"
+          [disabled]="!hasPreviousPage()"
+          aria-label="Previous"
+        >
+          <span aria-hidden="true">&lsaquo;</span>
+        </button>
+      </li>
+
+      <!-- Page numbers -->
+      <li
+        *ngFor="let page of visiblePages()"
+        class="page-item"
+        [class.active]="page === currentPage"
+        [class.disabled]="page === '...'"
+      >
+        <button
+          *ngIf="page !== '...'"
+          class="page-link"
+          (click)="goToPage(page)"
+          [attr.aria-current]="page === currentPage ? 'page' : null"
+        >
+          {{ page }}
+        </button>
+        <span *ngIf="page === '...'" class="page-link">...</span>
+      </li>
+
+      <!-- Next page -->
+      <li class="page-item" [class.disabled]="!hasNextPage()">
+        <button
+          class="page-link"
+          (click)="goToNext()"
+          [disabled]="!hasNextPage()"
+          aria-label="Next"
+        >
+          <span aria-hidden="true">&rsaquo;</span>
+        </button>
+      </li>
+
+      <!-- Last page -->
+      <li class="page-item" [class.disabled]="!hasNextPage()">
+        <button
+          class="page-link"
+          (click)="goToLast()"
+          [disabled]="!hasNextPage()"
+          aria-label="Last"
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</nav>

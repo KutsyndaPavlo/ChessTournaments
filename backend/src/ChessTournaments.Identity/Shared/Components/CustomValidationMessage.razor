@@ -1,0 +1,61 @@
+﻿@using System.Linq
+@using System.Linq.Expressions
+
+@typeparam TValue
+@implements IDisposable
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger mt-1">
+        <div>- @_errorMessage</div>
+    </div>
+}
+
+@code {
+    private FieldIdentifier _fieldIdentifier;
+    private string? _errorMessage;
+
+    [CascadingParameter]
+    private EditContext? CascadingEditContext { get; set; }
+
+    private EditContext EditContext { get; set; } = null!;
+
+    [Parameter]
+    public Expression<Func<TValue>> For { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        if (For is null)
+        {
+            throw new InvalidOperationException($"{GetType()} requires a value for the 'For' parameter.");
+        }
+
+        EditContext = CascadingEditContext ?? throw new InvalidOperationException($"{GetType()} requires a cascading parameter of type {nameof(EditContext)}. For example, you can use {GetType()} inside an {nameof(EditForm)}.");
+
+        _fieldIdentifier = FieldIdentifier.Create(For);
+
+        EditContext.OnValidationStateChanged += HandleValidationStateChanged;
+        UpdateMessage();
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdateMessage();
+    }
+
+    private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+    {
+        UpdateMessage();
+        StateHasChanged();
+    }
+
+    private void UpdateMessage()
+    {
+        _errorMessage = EditContext.GetValidationMessages(_fieldIdentifier).FirstOrDefault();
+    }
+
+    public void Dispose()
+    {
+        EditContext.OnValidationStateChanged -= HandleValidationStateChanged;
+    }
+}

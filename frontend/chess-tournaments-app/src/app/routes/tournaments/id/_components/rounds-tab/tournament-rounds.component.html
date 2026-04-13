@@ -1,0 +1,383 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="mt-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <h3 class="text-xl font-semibold text-chess-heading">Tournament Rounds</h3>
+    @if (canCreateRound()) {
+      <p-button
+        label="Create Round with Pairings"
+        icon="pi pi-plus-circle"
+        [loading]="creatingRound()"
+        [disabled]="loading()"
+        (onClick)="createRound()"
+      />
+    }
+  </div>
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+      <i class="pi pi-exclamation-circle mr-2"></i>
+      {{ error() }}
+      <p-button
+        label="Retry"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        class="ml-4"
+        (onClick)="loadRounds()"
+      />
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-12">
+      <i class="pi pi-spin pi-spinner text-5xl text-chess-primary"></i>
+      <p class="mt-4 text-gray-500">Loading rounds...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && rounds().length === 0) {
+    <div class="flex flex-col items-center justify-center py-12 text-center">
+      <i class="pi pi-th-large mb-4 text-6xl text-gray-300"></i>
+      <h4 class="mb-2 text-lg font-semibold text-gray-600">No rounds created yet</h4>
+      <p class="text-gray-500">Rounds will be created when the tournament starts</p>
+    </div>
+  }
+
+  <!-- Rounds List -->
+  @if (!loading() && rounds().length > 0) {
+    <div class="space-y-4">
+      @for (round of rounds(); track round.id) {
+        <p-panel
+          [toggleable]="true"
+          [collapsed]="!round.expanded"
+          (collapsedChange)="expandRound(round)"
+        >
+          <ng-template pTemplate="header">
+            <div class="flex w-full items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-lg font-semibold">Round {{ round.roundNumber }}</span>
+                <p-tag
+                  [value]="getRoundStatusText(round)"
+                  [severity]="getRoundStatusSeverity(round)"
+                />
+              </div>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="icons">
+            <div class="flex gap-2">
+              @if (canStartRound(round)) {
+                <p-button
+                  label="Start"
+                  icon="pi pi-play"
+                  severity="success"
+                  size="small"
+                  (onClick)="startRound(round); $event.stopPropagation()"
+                />
+              }
+              @if (canCompleteRound(round)) {
+                <p-button
+                  label="Complete"
+                  icon="pi pi-check"
+                  severity="primary"
+                  size="small"
+                  (onClick)="completeRound(round); $event.stopPropagation()"
+                />
+              }
+            </div>
+          </ng-template>
+
+          <!-- Round Info -->
+          <div class="mb-4 flex flex-wrap gap-6 text-sm text-gray-500">
+            <div class="flex items-center gap-1">
+              <i class="pi pi-th-large"></i>
+              <span>{{ round.matchCount }} matches</span>
+            </div>
+            @if (round.startTime) {
+              <div class="flex items-center gap-1">
+                <i class="pi pi-play"></i>
+                <span>Started: {{ round.startTime | date: 'short' }}</span>
+              </div>
+            }
+            @if (round.endTime) {
+              <div class="flex items-center gap-1">
+                <i class="pi pi-stop"></i>
+                <span>Ended: {{ round.endTime | date: 'short' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Matches Table -->
+          @if (round.matches && round.matches.length > 0) {
+            <p-table
+              [value]="round.matches"
+              [rowHover]="true"
+              [tableStyle]="{ 'min-width': '40rem' }"
+              class="p-datatable-sm"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 80px">Board</th>
+                  <th>White</th>
+                  <th>Black</th>
+                  <th style="width: 100px" class="text-center">Result</th>
+                  <th style="width: 200px">Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-match>
+                <tr [class.bg-green-50]="match.isCompleted">
+                  <td class="font-medium">{{ match.boardNumber }}</td>
+                  <td>{{ match.whitePlayerId }}</td>
+                  <td>{{ match.blackPlayerId }}</td>
+                  <td class="text-center">
+                    @if (match.isCompleted) {
+                      <p-tag
+                        [value]="getShortResult(match.result)"
+                        [severity]="getMatchResultSeverity(match.result)"
+                      />
+                    } @else {
+                      <span class="text-gray-400">—</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="flex gap-1">
+                      <p-button
+                        icon="pi pi-info-circle"
+                        severity="info"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        pTooltip="View Details"
+                        (onClick)="openMatchDetails(match)"
+                      />
+                      @if (!match.isCompleted && canRecordResult()) {
+                        <p-button
+                          icon="pi pi-check-square"
+                          severity="primary"
+                          [text]="true"
+                          [rounded]="true"
+                          size="small"
+                          pTooltip="Record Result"
+                          (onClick)="openResultModal(match)"
+                        />
+                        <p-button
+                          icon="pi pi-pencil"
+                          severity="secondary"
+                          [text]="true"
+                          [rounded]="true"
+                          size="small"
+                          pTooltip="Edit Moves"
+                          (onClick)="openMovesModal(match)"
+                        />
+                      }
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          } @else {
+            <div class="py-4 text-center text-gray-500">
+              <i class="pi pi-info-circle mr-2"></i>
+              Loading matches...
+            </div>
+          }
+        </p-panel>
+      }
+    </div>
+  }
+</div>
+
+<!-- Record Result Dialog -->
+<p-dialog
+  header="Record Match Result"
+  [(visible)]="showResultModal"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="!recordingResult()"
+>
+  @if (selectedMatch()) {
+    <div class="mb-4">
+      <p class="mb-2">
+        <span class="font-semibold">Board {{ selectedMatch()!.boardNumber }}</span>
+      </p>
+      <p class="text-gray-600">
+        White: {{ selectedMatch()!.whitePlayerId }}<br />
+        Black: {{ selectedMatch()!.blackPlayerId }}
+      </p>
+    </div>
+    <p class="mb-4 font-medium">Select the result:</p>
+    <div class="flex flex-col gap-2">
+      <p-button
+        label="White Wins (1-0)"
+        severity="contrast"
+        styleClass="w-full"
+        [loading]="recordingResult()"
+        (onClick)="recordResult(GameResult.WhiteWin)"
+      />
+      <p-button
+        label="Draw (½-½)"
+        severity="secondary"
+        styleClass="w-full"
+        [loading]="recordingResult()"
+        (onClick)="recordResult(GameResult.Draw)"
+      />
+      <p-button
+        label="Black Wins (0-1)"
+        styleClass="w-full"
+        [loading]="recordingResult()"
+        (onClick)="recordResult(GameResult.BlackWin)"
+      />
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="recordingResult()"
+      (onClick)="closeResultModal()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Update Moves Dialog -->
+<p-dialog
+  header="Update Match Moves"
+  [(visible)]="showMovesModal"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="!updatingMoves()"
+>
+  @if (selectedMatch()) {
+    <div class="mb-4">
+      <p class="mb-2">
+        <span class="font-semibold">Board {{ selectedMatch()!.boardNumber }}</span>
+      </p>
+      <p class="text-gray-600">
+        White: {{ selectedMatch()!.whitePlayerId }}<br />
+        Black: {{ selectedMatch()!.blackPlayerId }}
+      </p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="matchMoves" class="font-medium">Moves (PGN format):</label>
+      <textarea
+        pTextarea
+        id="matchMoves"
+        rows="8"
+        [ngModel]="matchMoves()"
+        (ngModelChange)="matchMoves.set($event)"
+        [disabled]="updatingMoves()"
+        placeholder="Enter moves in PGN format..."
+        class="w-full"
+      ></textarea>
+      <small class="text-gray-500">Example: 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6</small>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="updatingMoves()"
+      (onClick)="closeMovesModal()"
+    />
+    <p-button
+      label="Save Moves"
+      icon="pi pi-save"
+      [loading]="updatingMoves()"
+      (onClick)="updateMoves()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Match Details Dialog -->
+<p-dialog
+  header="Match Details"
+  [(visible)]="showMatchDetailsModal"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+>
+  @if (loadingMatchDetails()) {
+    <div class="flex flex-col items-center justify-center py-8">
+      <i class="pi pi-spin pi-spinner text-4xl text-chess-primary"></i>
+      <p class="mt-4 text-gray-500">Loading match details...</p>
+    </div>
+  } @else if (selectedMatchDetails()) {
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <!-- Match Information -->
+      <p-card header="Match Information">
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Board Number:</span>
+            <span class="font-medium">{{ selectedMatchDetails()!.boardNumber }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">White Player:</span>
+            <span class="font-medium">{{ selectedMatchDetails()!.whitePlayerId }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Black Player:</span>
+            <span class="font-medium">{{ selectedMatchDetails()!.blackPlayerId }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-500">Status:</span>
+            @if (selectedMatchDetails()!.isCompleted) {
+              <p-tag value="Completed" severity="success" />
+            } @else {
+              <p-tag value="Ongoing" severity="warn" />
+            }
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Result Information -->
+      <p-card header="Result Information">
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Result:</span>
+            <span class="font-medium">{{
+              getResultDisplay(selectedMatchDetails()!.result || '')
+            }}</span>
+          </div>
+          @if (selectedMatchDetails()!.completedAt) {
+            <div class="flex justify-between">
+              <span class="text-gray-500">Completed At:</span>
+              <span class="font-medium">{{
+                selectedMatchDetails()!.completedAt | date: 'medium'
+              }}</span>
+            </div>
+          }
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Moves Section -->
+    <div class="mt-6">
+      @if (selectedMatchDetails()!.moves) {
+        <h4 class="mb-2 font-semibold">Moves</h4>
+        <pre class="rounded-lg border bg-gray-50 p-4 font-mono text-sm">{{
+          selectedMatchDetails()!.moves
+        }}</pre>
+      } @else {
+        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-700">
+          <i class="pi pi-info-circle mr-2"></i>
+          No moves recorded for this match yet.
+        </div>
+      }
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Close"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="closeMatchDetailsModal()"
+    />
+  </ng-template>
+</p-dialog>

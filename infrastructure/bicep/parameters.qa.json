@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "qa"
+    },
+    "location": {
+      "value": "swedencentral"
+    },
+    "staticWebAppLocation": {
+      "value": "westeurope"
+    },
+    "sqlServerLocation": {
+      "value": "swedencentral"
+    },
+    "projectName": {
+      "value": "chess-tournaments"
+    },
+    "sqlAdminLogin": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "SqlAdminLogin"
+      }
+    },
+    "sqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "SqlAdminPassword"
+      }
+    },
+    "apiAppServicePlanSku": {
+      "value": {
+        "name": "B1",
+        "tier": "Basic",
+        "capacity": 1
+      }
+    },
+    "sqlDatabaseSku": {
+      "value": {
+        "name": "Basic",
+        "tier": "Basic",
+        "capacity": 5
+      }
+    },
+    "serviceBusSku": {
+      "value": "Standard"
+    }
+  }
+}

@@ -1,0 +1,170 @@
+<p-toast />
+
+<div class="mt-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <h3 class="text-xl font-semibold text-chess-heading">Registered Players</h3>
+    @if (canRegisterPlayer()) {
+      <p-button
+        [label]="showRegisterForm() ? 'Cancel' : 'Register Player'"
+        [icon]="showRegisterForm() ? 'pi pi-times' : 'pi pi-user-plus'"
+        [severity]="showRegisterForm() ? 'secondary' : 'primary'"
+        (onClick)="toggleRegisterForm()"
+      />
+    }
+  </div>
+
+  <!-- Register Player Form -->
+  @if (showRegisterForm()) {
+    <p-card header="Register New Player" class="mb-6">
+      <form [formGroup]="registerForm" (ngSubmit)="onRegisterPlayer()">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="flex flex-col gap-2">
+            <label for="playerId" class="font-medium">Player ID *</label>
+            <input
+              pInputText
+              id="playerId"
+              formControlName="playerId"
+              placeholder="e.g., user123"
+              [class.ng-invalid]="isFieldInvalid('playerId')"
+              [class.ng-dirty]="isFieldInvalid('playerId')"
+            />
+            @if (isFieldInvalid('playerId')) {
+              <small class="text-red-500">Player ID is required</small>
+            }
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="playerName" class="font-medium">Player Name *</label>
+            <input
+              pInputText
+              id="playerName"
+              formControlName="playerName"
+              placeholder="e.g., John Doe"
+              [class.ng-invalid]="isFieldInvalid('playerName')"
+              [class.ng-dirty]="isFieldInvalid('playerName')"
+            />
+            @if (isFieldInvalid('playerName')) {
+              <small class="text-red-500">Player name is required</small>
+            }
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="rating" class="font-medium">Rating (optional)</label>
+            <p-inputNumber
+              inputId="rating"
+              formControlName="rating"
+              placeholder="e.g., 1500"
+              [min]="0"
+              [max]="3000"
+              [useGrouping]="false"
+            />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <p-button
+            label="Cancel"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="toggleRegisterForm()"
+          />
+          <p-button
+            type="submit"
+            label="Register Player"
+            icon="pi pi-user-plus"
+            [loading]="registering()"
+          />
+        </div>
+      </form>
+    </p-card>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+      <i class="pi pi-exclamation-circle mr-2"></i>
+      {{ error() }}
+      <p-button
+        label="Retry"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        class="ml-4"
+        (onClick)="loadPlayers()"
+      />
+    </div>
+  }
+
+  <!-- Players Table -->
+  <p-table
+    [value]="players()"
+    [loading]="loading()"
+    [rowHover]="true"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    class="p-datatable-striped"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 80px" class="text-center">Rank</th>
+        <th>Player Name</th>
+        <th style="width: 120px" class="text-center">Rating</th>
+        <th style="width: 120px" class="text-center">Score</th>
+        <th style="width: 140px" class="text-center">Games Played</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-player let-i="rowIndex">
+      <tr>
+        <td class="text-center">
+          <p-tag [value]="getPlayerRank(i).toString()" severity="secondary" />
+        </td>
+        <td>
+          <span class="font-semibold text-chess-heading">{{ player.playerName }}</span>
+          <p class="mt-1 text-sm text-gray-500">ID: {{ player.playerId }}</p>
+        </td>
+        <td class="text-center">
+          @if (player.rating) {
+            <p-tag [value]="player.rating.toString()" severity="info" />
+          } @else {
+            <span class="text-gray-400">—</span>
+          }
+        </td>
+        <td class="text-center">
+          <span class="text-lg font-bold text-chess-primary">
+            {{ player.totalScore | number: '1.1-1' }}
+          </span>
+        </td>
+        <td class="text-center">
+          {{ player.gamesPlayed }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="py-12 text-center">
+          <div class="flex flex-col items-center">
+            <i class="pi pi-users mb-4 text-6xl text-gray-300"></i>
+            <h3 class="mb-2 text-lg font-semibold text-gray-600">No players registered yet</h3>
+            <p class="text-gray-500">Be the first to register!</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td colspan="5" class="py-12 text-center">
+          <i class="pi pi-spin pi-spinner text-4xl text-chess-primary"></i>
+          <p class="mt-2 text-gray-500">Loading players...</p>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="summary">
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <i class="pi pi-info-circle"></i>
+        Players are ranked by score (highest first), then by rating
+      </div>
+    </ng-template>
+  </p-table>
+</div>

@@ -1,0 +1,16 @@
+/* Match Search Styles */
+
+/* Chess-themed colors */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+/* Input field full width */
+:host ::ng-deep .p-inputtext {
+  width: 100%;
+}
+
+/* Card styling */
+:host ::ng-deep .p-card .p-card-content {
+  padding-top: 0;
+}

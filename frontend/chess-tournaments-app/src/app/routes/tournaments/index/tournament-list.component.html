@@ -1,0 +1,121 @@
+<div class="mx-auto max-w-7xl px-4 py-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-chess-primary">Chess Tournaments</h1>
+    <p-button
+      *hasPermission="Permission.CreateTournament"
+      label="Create Tournament"
+      icon="pi pi-plus"
+      (onClick)="createTournament()"
+    />
+  </div>
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+      {{ error() }}
+      <p-button
+        label="Retry"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        class="ml-3"
+        (onClick)="loadTournaments()"
+      />
+    </div>
+  }
+
+  <!-- Tournament Table -->
+  <p-table
+    [value]="tournaments()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [first]="first()"
+    [rowsPerPageOptions]="rowsPerPageOptions"
+    [loading]="loading()"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} tournaments"
+    (onLazyLoad)="loadTournaments($event)"
+    [rowHover]="true"
+    [tableStyle]="{ 'min-width': '60rem' }"
+    class="p-datatable-striped"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name" style="width: 20%">
+          Name
+          <p-sortIcon field="name" />
+        </th>
+        <th style="width: 10%">Status</th>
+        <th pSortableColumn="startDate" style="width: 12%">
+          Start Date
+          <p-sortIcon field="startDate" />
+        </th>
+        <th style="width: 15%">Location</th>
+        <th style="width: 10%">Players</th>
+        <th style="width: 10%">Format</th>
+        <th style="width: 10%">Time Control</th>
+        <th style="width: 8%">Rounds</th>
+        <th style="width: 5%"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-tournament>
+      <tr class="cursor-pointer" (click)="viewTournament(tournament)">
+        <td>
+          <span class="font-semibold text-chess-heading">{{ tournament.name }}</span>
+          @if (tournament.description) {
+            <p class="mt-1 truncate text-sm text-gray-500" [pTooltip]="tournament.description">
+              {{ tournament.description }}
+            </p>
+          }
+        </td>
+        <td>
+          <p-tag [value]="tournament.status" [severity]="getStatusSeverity(tournament.status)" />
+        </td>
+        <td>{{ tournament.startDate | date: 'mediumDate' }}</td>
+        <td>{{ tournament.location || 'Online' }}</td>
+        <td>
+          <span class="font-medium">{{ tournament.playerCount }}</span>
+          <span class="text-gray-500"> / {{ tournament.settings.maxPlayers }}</span>
+        </td>
+        <td>{{ getFormatDisplay(tournament.settings.format) }}</td>
+        <td>
+          {{ tournament.settings.timeInMinutes }}+{{ tournament.settings.incrementInSeconds }}
+        </td>
+        <td class="text-center">{{ tournament.roundCount }}</td>
+        <td>
+          <p-button
+            icon="pi pi-eye"
+            [rounded]="true"
+            [text]="true"
+            pTooltip="View Details"
+            (onClick)="viewTournament(tournament); $event.stopPropagation()"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="py-12 text-center">
+          <div class="flex flex-col items-center">
+            <i class="pi pi-trophy mb-4 text-6xl text-gray-300"></i>
+            <h3 class="mb-2 text-lg font-semibold text-gray-600">No tournaments found</h3>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td colspan="9" class="py-12 text-center">
+          <i class="pi pi-spin pi-spinner text-4xl text-chess-primary"></i>
+          <p class="mt-2 text-gray-500">Loading tournaments...</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

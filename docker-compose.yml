@@ -1,0 +1,105 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: chess-tournaments-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - chess-tournaments-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourStrong!Passw0rd -Q "SELECT 1" -C || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  identity:
+    build:
+      context: ./backend
+      dockerfile: src/ChessTournaments.Identity/Dockerfile
+    container_name: chess-tournaments-identity
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ChessTournaments;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - Oidc__Issuer=http://localhost:5001/
+    ports:
+      - "5001:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - chess-tournaments-network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: src/ChessTournaments.API/Dockerfile
+    container_name: chess-tournaments-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ChessTournaments;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - Oidc__Authority=http://identity:8080/
+      - Oidc__Issuer=http://localhost:5001/
+      - Oidc__API__ClientId=chess-tournaments_api
+      - Oidc__API__ClientSecret=846B62D0-DEF9-4215-A99D-86E6B8DAB342
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver
+      - identity
+    networks:
+      - chess-tournaments-network
+    restart: unless-stopped
+
+  seq:
+    image: datalust/seq:latest
+    container_name: chess-tournaments-seq
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Admin123!
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    networks:
+      - chess-tournaments-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend/chess-tournaments-app
+      dockerfile: Dockerfile
+    container_name: chess-tournaments-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+      - identity
+    networks:
+      - chess-tournaments-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  sqlserver-data:
+    driver: local
+  seq-data:
+    driver: local
+
+networks:
+  chess-tournaments-network:
+    driver: bridge

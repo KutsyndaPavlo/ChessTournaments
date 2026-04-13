@@ -1,0 +1,274 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="mx-auto max-w-7xl px-4 py-6">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-12">
+      <i class="pi pi-spin pi-spinner text-5xl text-chess-primary"></i>
+      <p class="mt-4 text-gray-500">Loading tournament...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error() && !loading()) {
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+      <i class="pi pi-exclamation-circle mr-2"></i>
+      {{ error() }}
+      <p-button
+        label="Retry"
+        icon="pi pi-refresh"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        class="ml-4"
+        (onClick)="loadTournament(tournament()?.id || '')"
+      />
+    </div>
+  }
+
+  <!-- Tournament Content -->
+  @if (!loading() && !error() && tournament()) {
+    <!-- Header -->
+    <div class="mb-6">
+      <p-button
+        label="Back to Tournaments"
+        icon="pi pi-arrow-left"
+        [text]="true"
+        (onClick)="goBack()"
+        class="mb-4"
+      />
+
+      <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 class="mb-2 text-3xl font-bold text-chess-heading">{{ tournament()!.name }}</h1>
+          <p-tag
+            [value]="tournament()!.status || ''"
+            [severity]="getStatusSeverity(tournament()!.status || '')"
+          />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-2">
+          @if (canOpenRegistration()) {
+            <p-button
+              label="Open Registration"
+              icon="pi pi-play"
+              severity="success"
+              (onClick)="openRegistration()"
+            />
+          }
+          @if (canCloseRegistration()) {
+            <p-button
+              label="Start Tournament"
+              icon="pi pi-flag"
+              severity="primary"
+              (onClick)="closeRegistration()"
+            />
+          }
+          @if (canCompleteTournament()) {
+            <p-button
+              label="Complete"
+              icon="pi pi-check"
+              severity="success"
+              (onClick)="completeTournament()"
+            />
+          }
+          @if (canCancelTournament()) {
+            <p-button
+              label="Cancel"
+              icon="pi pi-times"
+              severity="danger"
+              [outlined]="true"
+              (onClick)="cancelTournament()"
+            />
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab value="0">
+          <i class="pi pi-info-circle mr-2"></i>
+          Overview
+        </p-tab>
+        <p-tab value="1" (click)="navigateToPlayers()">
+          <i class="pi pi-users mr-2"></i>
+          Players ({{ tournament()!.playerCount }})
+        </p-tab>
+        <p-tab value="2" (click)="navigateToRounds()">
+          <i class="pi pi-th-large mr-2"></i>
+          Rounds ({{ tournament()!.roundCount }})
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Overview Tab -->
+        <p-tabpanel value="0">
+          <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Main Content -->
+            <div class="space-y-6 lg:col-span-2">
+              <!-- Tournament Information -->
+              <p-card header="Tournament Information">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Description</label>
+                    <p class="mt-1">{{ tournament()!.description || 'No description provided' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Location</label>
+                    <p class="mt-1">{{ tournament()!.location || 'Online' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Start Date</label>
+                    <p class="mt-1">{{ tournament()!.startDate | date: 'full' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">End Date</label>
+                    <p class="mt-1">
+                      {{
+                        tournament()!.endDate
+                          ? (tournament()!.endDate | date: 'full')
+                          : 'Not completed yet'
+                      }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Created</label>
+                    <p class="mt-1">{{ tournament()!.createdAt | date: 'medium' }}</p>
+                  </div>
+                </div>
+              </p-card>
+
+              <!-- Tournament Settings -->
+              <p-card header="Tournament Settings">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Format</label>
+                    <p class="mt-1 font-semibold">
+                      {{ getFormatDisplay(tournament()!.settings?.format || '') }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Time Control</label>
+                    <p class="mt-1 font-semibold">
+                      {{ getTimeControlDisplay(tournament()!.settings?.timeControl || '') }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Time Setting</label>
+                    <p class="mt-1 font-semibold">
+                      {{ tournament()!.settings?.timeInMinutes }} min +
+                      {{ tournament()!.settings?.incrementInSeconds }} sec
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Number of Rounds</label>
+                    <p class="mt-1 font-semibold">{{ tournament()!.settings?.numberOfRounds }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Player Limit</label>
+                    <p class="mt-1 font-semibold">
+                      {{ tournament()!.settings?.minPlayers }} -
+                      {{ tournament()!.settings?.maxPlayers }} players
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Allow Byes</label>
+                    <p class="mt-1">
+                      <p-tag
+                        [value]="tournament()!.settings?.allowByes ? 'Yes' : 'No'"
+                        [severity]="tournament()!.settings?.allowByes ? 'success' : 'secondary'"
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Entry Fee</label>
+                    <p class="mt-1 font-semibold">
+                      ${{ tournament()!.settings?.entryFee | number: '1.2-2' }}
+                    </p>
+                  </div>
+                </div>
+              </p-card>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+              <!-- Statistics Card -->
+              <p-card header="Statistics">
+                <div class="space-y-6">
+                  <!-- Registered Players -->
+                  <div>
+                    <div class="mb-2 flex items-center justify-between">
+                      <span class="text-sm text-gray-500">Registered Players</span>
+                      <span class="text-lg font-bold text-chess-primary">
+                        {{ tournament()!.playerCount }} / {{ tournament()!.settings?.maxPlayers }}
+                      </span>
+                    </div>
+                    <p-progressbar [value]="getPlayerProgress()" [showValue]="false" />
+                  </div>
+
+                  <!-- Rounds Completed -->
+                  <div>
+                    <div class="mb-2 flex items-center justify-between">
+                      <span class="text-sm text-gray-500">Rounds Completed</span>
+                      <span class="text-lg font-bold text-green-600">
+                        {{ tournament()!.roundCount }} /
+                        {{ tournament()!.settings?.numberOfRounds }}
+                      </span>
+                    </div>
+                    <p-progressbar
+                      [value]="getRoundProgress()"
+                      [showValue]="false"
+                      class="progress-success"
+                    />
+                  </div>
+
+                  <!-- Status -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">Status</span>
+                    <p-tag
+                      [value]="tournament()!.status || ''"
+                      [severity]="getStatusSeverity(tournament()!.status || '')"
+                    />
+                  </div>
+                </div>
+              </p-card>
+
+              <!-- Join Tournament Card -->
+              @if (canRequestToJoin()) {
+                <p-card>
+                  <ng-template pTemplate="header">
+                    <div class="rounded-t-lg bg-blue-500 px-4 py-3 text-white">
+                      <h3 class="m-0 font-semibold">Registration Open</h3>
+                    </div>
+                  </ng-template>
+                  <p class="mb-4 text-gray-600">This tournament is accepting new players.</p>
+                  <p-button
+                    label="Request to Join Tournament"
+                    icon="pi pi-user-plus"
+                    [loading]="requestLoading()"
+                    (onClick)="requestToJoinTournament()"
+                    styleClass="w-full"
+                  />
+                </p-card>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Players Tab (handled by router) -->
+        <p-tabpanel value="1">
+          <router-outlet></router-outlet>
+        </p-tabpanel>
+
+        <!-- Rounds Tab (handled by router) -->
+        <p-tabpanel value="2">
+          <router-outlet></router-outlet>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</div>

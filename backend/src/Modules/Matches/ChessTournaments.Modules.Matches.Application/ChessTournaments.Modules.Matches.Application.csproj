@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="CSharpFunctionalExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChessTournaments.Modules.Matches.Domain\ChessTournaments.Modules.Matches.Domain.csproj" />
+    <ProjectReference Include="..\ChessTournaments.Modules.Matches.IntegrationEvents\ChessTournaments.Modules.Matches.IntegrationEvents.csproj" />
+    <ProjectReference Include="..\..\Tournaments\ChessTournaments.Modules.Tournaments.IntegrationEvents\ChessTournaments.Modules.Tournaments.IntegrationEvents.csproj" />
+  </ItemGroup>
+</Project>

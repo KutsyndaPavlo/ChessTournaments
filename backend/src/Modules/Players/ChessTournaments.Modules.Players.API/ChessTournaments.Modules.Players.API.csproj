@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChessTournaments.Modules.Players.Application\ChessTournaments.Modules.Players.Application.csproj" />
+    <ProjectReference Include="..\ChessTournaments.Modules.Players.Infrastructure\ChessTournaments.Modules.Players.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\ChessTournaments.Shared.Infrastructure\ChessTournaments.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

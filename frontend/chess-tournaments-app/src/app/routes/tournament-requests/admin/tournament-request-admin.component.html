@@ -1,0 +1,180 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="p-4">
+  <h2 class="text-2xl font-semibold text-chess-heading mb-6">Pending Tournament Requests</h2>
+
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex justify-center py-8">
+      <p-progressBar mode="indeterminate" [style]="{ height: '6px', width: '200px' }" />
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+      No pending tournament requests at this time.
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (request of requests(); track request.id) {
+        <p-card class="h-full">
+          <ng-template #header>
+            <div class="bg-chess-primary text-white px-4 py-3">
+              <h5 class="text-lg font-semibold m-0">
+                @if (request.tournament) {
+                  {{ request.tournament.name }}
+                } @else {
+                  Tournament Request
+                }
+              </h5>
+            </div>
+          </ng-template>
+
+          <div class="space-y-3">
+            @if (request.tournament) {
+              @if (request.tournament.description) {
+                <p class="text-gray-600 mb-4">{{ request.tournament.description }}</p>
+              }
+
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-user text-chess-primary"></i>
+                  <span class="font-medium">Requested by:</span>
+                  <span>{{ request.requestedBy }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-calendar text-chess-primary"></i>
+                  <span class="font-medium">Start Date:</span>
+                  <span>{{ request.tournament.startDate | date: 'medium' }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-map-marker text-chess-primary"></i>
+                  <span class="font-medium">Location:</span>
+                  <span>{{ request.tournament.location }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-info-circle text-chess-primary"></i>
+                  <span class="font-medium">Status:</span>
+                  <p-tag [value]="request.tournament.status" severity="secondary" />
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-users text-chess-primary"></i>
+                  <span class="font-medium">Current Players:</span>
+                  <span
+                    >{{ request.tournament.playerCount }} /
+                    {{ request.tournament.settings?.maxPlayers }}</span
+                  >
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-clock text-chess-primary"></i>
+                  <span class="font-medium">Submitted:</span>
+                  <span>{{ request.createdAt | date: 'short' }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-trophy text-chess-primary"></i>
+                  <span class="font-medium">Tournament ID:</span>
+                  <span class="text-sm font-mono">{{ request.tournamentId }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-user text-chess-primary"></i>
+                  <span class="font-medium">Requested by:</span>
+                  <span>{{ request.requestedBy }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-clock text-chess-primary"></i>
+                  <span class="font-medium">Submitted:</span>
+                  <span>{{ request.createdAt | date: 'short' }}</span>
+                </div>
+              </div>
+              <div
+                class="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2 rounded mt-3 text-sm"
+              >
+                Tournament details unavailable
+              </div>
+            }
+          </div>
+
+          <ng-template #footer>
+            <div class="flex justify-between gap-2">
+              <p-button
+                label="Approve"
+                icon="pi pi-check-circle"
+                severity="success"
+                [loading]="isProcessing(request.id || '')"
+                [disabled]="isProcessing(request.id || '')"
+                (click)="approveRequest(request)"
+              />
+              <p-button
+                label="Reject"
+                icon="pi pi-times-circle"
+                severity="danger"
+                [disabled]="isProcessing(request.id || '')"
+                (click)="openRejectModal(request)"
+              />
+            </div>
+          </ng-template>
+        </p-card>
+      }
+    </div>
+  }
+</div>
+
+<!-- Reject Modal -->
+<p-dialog
+  header="Reject Tournament Request"
+  [(visible)]="showRejectModal"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [closable]="!isProcessing(selectedRequest()?.id || '')"
+>
+  @if (selectedRequest(); as request) {
+    <div class="space-y-4">
+      <p>
+        Are you sure you want to reject this request from
+        <strong>{{ request.requestedBy }}</strong>
+        @if (request.tournament) {
+          for <strong>{{ request.tournament.name }}</strong>
+        }
+        ?
+      </p>
+      <div>
+        <label for="rejectionReason" class="block font-medium mb-2">Rejection Reason *</label>
+        <textarea
+          pTextarea
+          id="rejectionReason"
+          [ngModel]="rejectionReason()"
+          (ngModelChange)="rejectionReason.set($event)"
+          rows="3"
+          class="w-full"
+          placeholder="Please provide a reason for rejection..."
+          [disabled]="isProcessing(request.id || '')"
+        ></textarea>
+      </div>
+    </div>
+
+    <ng-template #footer>
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [disabled]="isProcessing(request.id || '')"
+          (click)="closeRejectModal()"
+        />
+        <p-button
+          [label]="isProcessing(request.id || '') ? 'Rejecting...' : 'Reject Request'"
+          severity="danger"
+          [loading]="isProcessing(request.id || '')"
+          [disabled]="!rejectionReason().trim() || isProcessing(request.id || '')"
+          (click)="confirmReject()"
+        />
+      </div>
+    </ng-template>
+  }
+</p-dialog>

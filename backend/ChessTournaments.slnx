@@ -1,0 +1,58 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project
+      Path="src/ChessTournaments.API/ChessTournaments.API.csproj"
+      Id="0d3eb381-631c-4897-a6da-00e1613b68e8"
+    />
+    <Project Path="src/ChessTournaments.Identity/ChessTournaments.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Matches/">
+    <Project Path="src/Modules/Matches/ChessTournaments.Modules.Matches.API/ChessTournaments.Modules.Matches.API.csproj" />
+    <Project Path="src/Modules/Matches/ChessTournaments.Modules.Matches.Application/ChessTournaments.Modules.Matches.Application.csproj" />
+    <Project Path="src/Modules/Matches/ChessTournaments.Modules.Matches.Domain/ChessTournaments.Modules.Matches.Domain.csproj" />
+    <Project Path="src/Modules/Matches/ChessTournaments.Modules.Matches.Infrastructure/ChessTournaments.Modules.Matches.Infrastructure.csproj" />
+    <Project Path="src/Modules/Matches/ChessTournaments.Modules.Matches.IntegrationEvents/ChessTournaments.Modules.Matches.IntegrationEvents.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Players/">
+    <Project Path="src/Modules/Players/ChessTournaments.Modules.Players.API/ChessTournaments.Modules.Players.API.csproj" />
+    <Project Path="src/Modules/Players/ChessTournaments.Modules.Players.Application/ChessTournaments.Modules.Players.Application.csproj" />
+    <Project Path="src/Modules/Players/ChessTournaments.Modules.Players.Domain/ChessTournaments.Modules.Players.Domain.csproj" />
+    <Project Path="src/Modules/Players/ChessTournaments.Modules.Players.Infrastructure/ChessTournaments.Modules.Players.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/TournamentRequests/">
+    <Project Path="src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.API/ChessTournaments.Modules.TournamentRequests.API.csproj" />
+    <Project Path="src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.Application/ChessTournaments.Modules.TournamentRequests.Application.csproj" />
+    <Project Path="src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.Domain/ChessTournaments.Modules.TournamentRequests.Domain.csproj" />
+    <Project Path="src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.Infrastructure/ChessTournaments.Modules.TournamentRequests.Infrastructure.csproj" />
+    <Project
+      Path="src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.IntegrationEvents/ChessTournaments.Modules.TournamentRequests.IntegrationEvents.csproj"
+      Id="072a38f5-8b10-4ebd-8aa1-78532e567090"
+    />
+  </Folder>
+  <Folder Name="/src/Modules/Tournaments/">
+    <Project Path="src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.API/ChessTournaments.Modules.Tournaments.API.csproj" />
+    <Project Path="src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.Application/ChessTournaments.Modules.Tournaments.Application.csproj" />
+    <Project Path="src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.Domain/ChessTournaments.Modules.Tournaments.Domain.csproj" />
+    <Project Path="src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.Infrastructure/ChessTournaments.Modules.Tournaments.Infrastructure.csproj" />
+    <Project Path="src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.IntegrationEvents/ChessTournaments.Modules.Tournaments.IntegrationEvents.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/ChessTournaments.Shared.Domain/ChessTournaments.Shared.Domain.csproj" />
+    <Project Path="src/Shared/ChessTournaments.Shared.Infrastructure/ChessTournaments.Shared.Infrastructure.csproj" />
+    <Project Path="src/Shared/ChessTournaments.Shared.IntegrationEvents/ChessTournaments.Shared.IntegrationEvents.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/modules/" />
+  <Folder Name="/tests/modules/Matches/" />
+  <Folder Name="/tests/modules/Matches/Unit/">
+    <Project Path="tests/Modules/Matches/Unit/ChessTournaments.Modules.Matches.UnitTests/ChessTournaments.Modules.Matches.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/modules/Tournaments/" />
+  <Folder Name="/tests/modules/Tournaments/Integration/">
+    <Project Path="tests/Modules/Tournaments/Integration/ChessTournaments.Modules.Tournaments.IntegrationTests/ChessTournaments.Modules.Tournaments.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/modules/Tournaments/Unit/">
+    <Project Path="tests/Modules/Tournaments/Unit/ChessTournaments.Modules.Tournaments.UnitTests/ChessTournaments.Modules.Tournaments.UnitTests.csproj" />
+  </Folder>
+</Solution>

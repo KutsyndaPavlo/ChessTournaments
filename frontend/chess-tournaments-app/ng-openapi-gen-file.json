@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/ng-openapi-gen/ng-openapi-gen-schema.json",
+  "input": "../../backend/src/ChessTournaments.API/ChessTournaments.API.json",
+  "fetchTimeout": 3000,
+  "output": "./src/app/infrastructure/api",
+  "configuration": "ApiConfiguration",
+  "ignoreUnusedModels": false,
+  "defaultTag": "Api",
+  "removeStaleFiles": true,
+  "modelIndex": true,
+  "serviceIndex": true,
+  "services": true,
+  "promises": false,
+  "enumArray": false,
+  "enumStyle": "pascal"
+}

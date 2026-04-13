@@ -1,0 +1,23 @@
+/* Chess Tournaments - Typography */
+
+html,
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+p {
+  line-height: 1.6;
+}
+
+a {
+  color: var(--chess-tournaments-link);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--chess-tournaments-link-hover);
+}

@@ -1,0 +1,123 @@
+<p-toast />
+
+<div class="p-4 max-w-3xl mx-auto">
+  <p-card>
+    <ng-template #header>
+      <div class="bg-chess-primary text-white px-4 py-3">
+        <h4 class="text-xl font-semibold m-0">Request to Join Tournament</h4>
+      </div>
+    </ng-template>
+
+    @if (error()) {
+      <div
+        class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex justify-between items-center"
+      >
+        <span>{{ error() }}</span>
+        <button class="text-red-700 hover:text-red-900" (click)="error.set(null)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+    }
+
+    @if (loadingTournaments()) {
+      <div class="flex flex-col items-center py-8">
+        <p-progressBar mode="indeterminate" [style]="{ height: '6px', width: '200px' }" />
+        <p class="mt-4 text-gray-600">Loading available tournaments...</p>
+      </div>
+    } @else if (tournaments().length === 0) {
+      <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
+        <i class="pi pi-info-circle mr-2"></i>
+        No tournaments are currently accepting registrations.
+      </div>
+      <div class="flex justify-end">
+        <p-button
+          label="View All Tournaments"
+          icon="pi pi-list"
+          severity="secondary"
+          [outlined]="true"
+          routerLink="/tournaments"
+        />
+      </div>
+    } @else {
+      <form [formGroup]="requestForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div>
+          <label for="tournamentId" class="block font-medium mb-2">Select Tournament *</label>
+          <p-select
+            id="tournamentId"
+            formControlName="tournamentId"
+            [options]="tournamentOptions()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="-- Select a tournament --"
+            class="w-full"
+            [invalid]="
+              requestForm.get('tournamentId')?.invalid && requestForm.get('tournamentId')?.touched
+            "
+          />
+          @if (
+            requestForm.get('tournamentId')?.invalid && requestForm.get('tournamentId')?.touched
+          ) {
+            <small class="text-red-500 mt-1 block">Please select a tournament</small>
+          }
+        </div>
+
+        @if (getSelectedTournament(); as selectedTournament) {
+          <p-card class="mt-4">
+            <ng-template #header>
+              <div class="px-4 py-3 border-b">
+                <h5 class="text-lg font-semibold m-0 text-chess-heading">Tournament Details</h5>
+              </div>
+            </ng-template>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <p><span class="font-medium">Name:</span> {{ selectedTournament.name }}</p>
+                <p><span class="font-medium">Location:</span> {{ selectedTournament.location }}</p>
+                <p>
+                  <span class="font-medium">Start Date:</span>
+                  {{ selectedTournament.startDate | date: 'medium' }}
+                </p>
+              </div>
+              <div class="space-y-2">
+                <p>
+                  <span class="font-medium">Format:</span> {{ selectedTournament.settings?.format }}
+                </p>
+                <p>
+                  <span class="font-medium">Time Control:</span>
+                  {{ selectedTournament.settings?.timeControl }}
+                </p>
+                <p>
+                  <span class="font-medium">Entry Fee:</span> ${{
+                    selectedTournament.settings?.entryFee
+                  }}
+                </p>
+              </div>
+            </div>
+            @if (selectedTournament.description) {
+              <p class="mt-4">
+                <span class="font-medium">Description:</span><br />
+                {{ selectedTournament.description }}
+              </p>
+            }
+          </p-card>
+        }
+
+        <div class="flex justify-between pt-4">
+          <p-button
+            label="Cancel"
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            routerLink="/tournaments"
+          />
+          <p-button
+            type="submit"
+            [label]="loading() ? 'Submitting...' : 'Submit Request'"
+            [icon]="loading() ? 'pi pi-spinner pi-spin' : 'pi pi-send'"
+            [loading]="loading()"
+            [disabled]="loading() || requestForm.invalid"
+          />
+        </div>
+      </form>
+    }
+  </p-card>
+</div>

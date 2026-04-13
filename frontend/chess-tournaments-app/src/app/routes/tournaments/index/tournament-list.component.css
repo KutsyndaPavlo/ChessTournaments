@@ -1,0 +1,39 @@
+/* Tournament List Styles */
+
+/* Table row hover effect */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.cursor-pointer:hover {
+  background-color: rgba(184, 134, 11, 0.05);
+}
+
+/* Chess-themed heading color */
+.text-chess-heading {
+  color: var(--chess-tournaments-heading, #1a1a2e);
+}
+
+.text-chess-primary {
+  color: var(--chess-tournaments-primary, #b8860b);
+}
+
+/* Table header styling */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: rgba(184, 134, 11, 0.08);
+  color: var(--chess-tournaments-heading, #1a1a2e);
+  font-weight: 600;
+}
+
+/* Paginator styling */
+:host ::ng-deep .p-paginator {
+  border-top: 1px solid rgba(184, 134, 11, 0.15);
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-current {
+  color: var(--chess-tournaments-text, #333);
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  :host ::ng-deep .p-datatable {
+    overflow-x: auto;
+  }
+}

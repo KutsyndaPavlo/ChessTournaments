@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\ChessTournaments.Modules.Tournaments.Application\ChessTournaments.Modules.Tournaments.Application.csproj" />
+    <ProjectReference Include="..\ChessTournaments.Modules.Tournaments.Infrastructure\ChessTournaments.Modules.Tournaments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\Shared\ChessTournaments.Shared.Infrastructure\ChessTournaments.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

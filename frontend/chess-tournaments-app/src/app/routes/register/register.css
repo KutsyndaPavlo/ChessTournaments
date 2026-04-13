@@ -1,0 +1,246 @@
+.register-container {
+  min-height: calc(100vh - 120px);
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.success-section {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 600px;
+}
+
+.chess-pieces {
+  font-size: 4rem;
+  color: var(--chess-tournaments-heading);
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.success-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--chess-tournaments-heading);
+  margin-bottom: 1rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.success-message {
+  font-size: 1.2rem;
+  color: var(--chess-tournaments-muted);
+  margin-bottom: 2rem;
+}
+
+.form-section {
+  width: 100%;
+  max-width: 800px;
+  background: var(--chess-tournaments-card-bg);
+  border: 1px solid var(--chess-tournaments-border);
+  border-radius: 12px;
+  padding: 3rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--chess-tournaments-heading);
+  margin-bottom: 0.5rem;
+  text-shadow: none;
+}
+
+.form-subtitle {
+  font-size: 1rem;
+  color: var(--chess-tournaments-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--chess-tournaments-heading);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chess-icon {
+  font-size: 1.2rem;
+  color: var(--chess-tournaments-primary);
+}
+
+.form-control {
+  padding: 0.75rem 1rem;
+  background: var(--chess-tournaments-input-bg);
+  border: 1px solid var(--chess-tournaments-input-border);
+  border-radius: 8px;
+  color: var(--chess-tournaments-input-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--chess-tournaments-primary);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--chess-tournaments-input-placeholder);
+  opacity: 1;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+}
+
+.form-control.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: -0.25rem;
+}
+
+.form-hint {
+  color: var(--chess-tournaments-muted);
+  font-size: 0.875rem;
+  margin-top: -0.25rem;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--chess-tournaments-primary),
+    var(--chess-tournaments-primary-hover)
+  );
+  color: var(--chess-tournaments-on-primary);
+  box-shadow: 0 2px 8px rgba(184, 134, 11, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    var(--chess-tournaments-primary-hover),
+    var(--chess-tournaments-primary-active)
+  );
+  box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--chess-tournaments-text);
+  border: 1px solid var(--chess-tournaments-border);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--chess-tournaments-primary);
+  transform: translateY(-2px);
+}
+
+.btn-arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) .btn-arrow {
+  transform: translateX(4px);
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--chess-tournaments-border);
+}
+
+.footer-text {
+  color: var(--chess-tournaments-muted);
+  margin: 0;
+}
+
+.link-primary {
+  color: var(--chess-tournaments-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.link-primary:hover {
+  color: var(--chess-tournaments-primary-hover);
+  text-decoration: underline;
+}

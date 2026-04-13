@@ -1,0 +1,34 @@
+/* Chess Tournaments - Main Stylesheet */
+
+/* Tailwind CSS v4 */
+@import 'tailwindcss';
+
+/* PrimeNG Tailwind Integration */
+@import 'tailwindcss-primeui';
+
+/* CSS Layer ordering for PrimeNG compatibility */
+@layer tailwind-base, primeng, tailwind-utilities;
+
+/* Chess Tournaments Theme */
+@import './colors.css';
+@import './typography.css';
+@import './extensions.css';
+
+/* PrimeIcons */
+@import 'primeicons/primeicons.css';
+
+/* Custom Tailwind Theme Extensions */
+@theme {
+  /* Chess-themed colors for Tailwind utilities */
+  --color-chess-primary: #b8860b;
+  --color-chess-primary-hover: #9a7009;
+  --color-chess-primary-active: #7a5807;
+  --color-chess-heading: #2c2416;
+  --color-chess-text: #3d3426;
+  --color-chess-muted: #6b5e4d;
+  --color-chess-success: #2e7d32;
+  --color-chess-error: #d32f2f;
+  --color-chess-warning: #f57c00;
+  --color-chess-light-square: #f0d9b5;
+  --color-chess-dark-square: #b58863;
+}

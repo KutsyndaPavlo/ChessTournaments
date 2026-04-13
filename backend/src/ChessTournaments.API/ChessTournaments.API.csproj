@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Enables build-time OpenAPI document generation -->
+  <PropertyGroup>
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <UserSecretsId>583dabc9-1bae-470c-9b20-19a8d61f2630</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Carter" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="OpenIddict.Abstractions" />
+    <PackageReference Include="OpenIddict.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.SystemNetHttp" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Tournaments\ChessTournaments.Modules.Tournaments.API\ChessTournaments.Modules.Tournaments.API.csproj" />
+    <ProjectReference Include="..\Modules\Tournaments\ChessTournaments.Modules.Tournaments.Infrastructure\ChessTournaments.Modules.Tournaments.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\TournamentRequests\ChessTournaments.Modules.TournamentRequests.API\ChessTournaments.Modules.TournamentRequests.API.csproj" />
+    <ProjectReference Include="..\Modules\TournamentRequests\ChessTournaments.Modules.TournamentRequests.Infrastructure\ChessTournaments.Modules.TournamentRequests.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Players\ChessTournaments.Modules.Players.API\ChessTournaments.Modules.Players.API.csproj" />
+    <ProjectReference Include="..\Modules\Players\ChessTournaments.Modules.Players.Infrastructure\ChessTournaments.Modules.Players.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Matches\ChessTournaments.Modules.Matches.API\ChessTournaments.Modules.Matches.API.csproj" />
+    <ProjectReference Include="..\Modules\Matches\ChessTournaments.Modules.Matches.Infrastructure\ChessTournaments.Modules.Matches.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shared\ChessTournaments.Shared.IntegrationEvents\ChessTournaments.Shared.IntegrationEvents.csproj" />
+  </ItemGroup>
+</Project>
