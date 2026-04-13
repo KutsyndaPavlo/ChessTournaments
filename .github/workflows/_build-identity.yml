@@ -1,0 +1,101 @@
+name: Build Identity App
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (qa/production)"
+      upload_artifacts:
+        required: false
+        type: boolean
+        default: false
+        description: "Whether to upload build artifacts"
+      update_build_number:
+        required: false
+        type: boolean
+        description: "Update build number"
+        default: false
+      update_version_from_tag:
+        required: false
+        type: boolean
+        description: "Update version based on latest tag"
+        default: false
+
+jobs:
+  build:
+    name: Build Blazor Identity App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Update Build Number
+        if: inputs.update_build_number == true
+        run: |
+          FILE="Directory.Build.props"
+
+          # Extract current version number
+          CURRENT_VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" $FILE)
+
+          # Split into parts (major.minor.patch.build)
+          IFS='.' read -r MAJOR MINOR PATCH BUILD <<< "$CURRENT_VERSION"
+
+          # Change build number
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}.${{ github.run_number }}"
+
+          echo "New version: $NEW_VERSION"
+
+          # Replace in file
+          sed -i "s#<Version>.*</Version>#<Version>${NEW_VERSION}</Version>#g" $FILE
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update Version from Tag
+        if: inputs.update_version_from_tag == true
+        run: |
+          # Get the full tag ref, for example refs/tags/production/1.2.3
+          TAG_REF="${{ github.ref }}"
+          echo "Tag ref: $TAG_REF"
+
+          # Extract the version (part after the last slash)
+          VERSION="${TAG_REF##*/}"
+          echo "Version: $VERSION"
+
+          # Update Directory.Build.props
+          FILE="Directory.Build.props"
+          sed -i "s#<Version>.*</Version>#<Version>${VERSION}</Version>#g" "$FILE"
+
+          # Set output for next steps
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Restore Dependencies
+        run: dotnet restore src/ChessTournaments.Identity/ChessTournaments.Identity.csproj
+
+      - name: Build
+        run: dotnet build src/ChessTournaments.Identity/ChessTournaments.Identity.csproj --no-restore --configuration Release
+
+      - name: Publish
+        if: inputs.upload_artifacts == true
+        run: |
+          dotnet publish src/ChessTournaments.Identity/ChessTournaments.Identity.csproj \
+            --output publish/identity \
+            --configuration Release \
+            --no-build
+
+      - name: Upload Artifacts
+        if: inputs.upload_artifacts == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: identity-build-${{ github.run_number }}
+          path: "./backend/publish/identity"
+          retention-days: 1

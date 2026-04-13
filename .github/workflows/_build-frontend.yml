@@ -1,0 +1,135 @@
+name: Build Frontend
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (qa/production)"
+      upload_artifacts:
+        required: false
+        type: boolean
+        default: false
+        description: "Whether to upload build artifacts"
+      update_build_number:
+        required: false
+        type: boolean
+        description: "Update build number"
+        default: false
+      update_version_from_tag:
+        required: false
+        type: boolean
+        description: "Update version based on latest tag"
+        default: false
+
+jobs:
+  build:
+    name: Build Angular
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Build Number in package.json
+        if: inputs.update_build_number == true
+        run: |
+          FILE="chess-tournaments-app/package.json"
+
+          # Extract current version number
+          CURRENT_VERSION=$(grep -oPm1 '(?<="version": ")[^"]+' $FILE)
+
+          # Split into parts (major.minor.patch.build)
+          IFS='.' read -r MAJOR MINOR PATCH BUILD <<< "$CURRENT_VERSION"
+
+          # Change build number
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}.${{ github.run_number }}"
+
+          echo "New version: $NEW_VERSION"
+
+          # Replace in file
+          sed -i "s/\"version\": \".*\"/\"version\": \"${NEW_VERSION}\"/g" $FILE
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update Version from Tag in package.json
+        if: inputs.update_version_from_tag == true
+        run: |
+          # Get the full tag ref, for example refs/tags/production/1.2.3
+          TAG_REF="${{ github.ref }}"
+          echo "Tag ref: $TAG_REF"
+
+          # Extract the version (part after the last slash)
+          VERSION="${TAG_REF##*/}"
+          echo "Version: $VERSION"
+
+          # Update package.json
+          FILE="chess-tournaments-app/package.json"
+          sed -i "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/g" "$FILE"
+
+          # Set output for next steps
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: frontend/chess-tournaments-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/chess-tournaments-app
+        run: npm install --legacy-peer-deps
+        #npm ci
+
+      - name: Download OpenAPI Definition
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-definition-${{ github.run_number }}
+          path: ./backend/Api/
+
+      # - name: Lint
+      #   working-directory: frontend/chess-tournaments-app
+      #   run: npm run lint
+
+      - name: Check Formatting
+        working-directory: frontend/chess-tournaments-app
+        run: npm run prettier:check
+
+      # - name: Check API code mismatch
+      #   working-directory: frontend/chess-tournaments-app
+      #   run: |
+      #     API_FOLDER="src/app/infrastructure/api"
+      #     API_FOLDER_BACKUP="src/app/infrastructure/api_backup"
+      #     mkdir -p "$(dirname "$API_FOLDER_BACKUP")"
+      #     cp -r "$API_FOLDER" "$API_FOLDER_BACKUP"
+
+      #     npm run ng-openapi-gen
+
+      #     echo "Checking code generated files"
+      #     if diff -rq "$API_FOLDER" "$API_FOLDER_BACKUP"; then
+      #       echo "Folders are identical"
+      #       rm -rf "$API_FOLDER_BACKUP"
+      #     else
+      #       echo "There are missing code generated files"
+      #       exit 1
+      #     fi
+
+      - name: Build
+        working-directory: frontend/chess-tournaments-app
+        run: npm run build -- --configuration=${{ inputs.environment }} --output-path=dist
+
+      - name: Copy Azure Config File
+        working-directory: frontend/chess-tournaments-app
+        run: cp staticwebapp.config.json dist/browser/
+
+      - name: Upload Artifacts
+        if: inputs.upload_artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.run_number }}
+          path: "./frontend/chess-tournaments-app/dist"
+          retention-days: 1

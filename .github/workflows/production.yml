@@ -1,0 +1,77 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - "production/*"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  build-backend:
+    uses: ./.github/workflows/_build-backend.yml
+    name: Build Backend
+    with:
+      environment: production
+      run_publish: true
+      update_version_from_tag: true
+
+  deploy-backend:
+    needs: build-backend
+    uses: ./.github/workflows/_deploy-backend.yml
+    name: Deploy Backend
+    with:
+      environment: production
+    secrets: inherit
+
+  # Will be enabled after db set up
+  # update_db:
+  #   uses: ./.github/workflows/_migrate-db.yml
+  #   needs: [deploy-backend]
+  #   name: Update DB
+  #   with:
+  #     environment: Production
+  #   secrets: inherit
+
+  build-frontend:
+    needs: [build-backend]
+    name: Build Frontend
+    uses: ./.github/workflows/_build-frontend.yml
+    with:
+      environment: production
+      upload_artifacts: true
+      update_version_from_tag: true
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: build-frontend
+    uses: ./.github/workflows/_deploy-frontend.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  build-identity:
+    needs: [build-backend]
+    name: Build Identity App
+    uses: ./.github/workflows/_build-identity.yml
+    with:
+      environment: production
+      upload_artifacts: true
+      update_version_from_tag: true
+
+  deploy-identity:
+    name: Deploy Identity App
+    needs: build-identity
+    uses: ./.github/workflows/_deploy-identity.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  create-release:
+    name: Create GitHub Release
+    needs: [deploy-backend, deploy-frontend, deploy-identity]
+    uses: ./.github/workflows/_create-github-release.yml
+    secrets: inherit

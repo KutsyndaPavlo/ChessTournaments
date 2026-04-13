@@ -1,0 +1,34 @@
+name: Deploy Backend
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (Testing/Staging/Production)"
+
+env:
+  PUBLISH_OUTPUT_PATH: "./backend-publish-output"
+
+jobs:
+  deploy-azure-web-app:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build-${{ github.run_number }}
+          path: "./publish"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_BACKEND_APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_BACKEND_APP_PUBLISH_PROFILE }}
+          package: "./publish"

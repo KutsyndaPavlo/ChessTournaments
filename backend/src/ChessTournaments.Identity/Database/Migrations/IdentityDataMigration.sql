@@ -238,3 +238,4 @@ ORDER BY [ClientId];
 -- - Authorization Code: 20 hours
 -- - Refresh Token: 30 days (sliding expiration)
 -------------------------------------------------------------------
+

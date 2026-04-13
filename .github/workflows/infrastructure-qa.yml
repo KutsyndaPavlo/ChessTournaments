@@ -1,0 +1,42 @@
+name: Deploy Infrastructure - QA
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-qa.yml'
+      - '.github/workflows/_deploy-infrastructure.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: infrastructure-qa
+  cancel-in-progress: false
+
+jobs:
+  deploy-infrastructure:
+    name: Deploy QA Infrastructure
+    uses: ./.github/workflows/_deploy-infrastructure.yml
+    with:
+      environment: qa
+      resourceGroupName: chess-tournaments-qa-sc-rg
+      location: swedencentral
+    secrets: inherit
+
+  output-summary:
+    name: Deployment Summary
+    needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display outputs
+        run: |
+          echo "### QA Infrastructure Deployed Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**API App Service:** ${{ needs.deploy-infrastructure.outputs.apiAppServiceName }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Identity App:** ${{ needs.deploy-infrastructure.outputs.identityStaticWebAppName }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Key Vault:** ${{ needs.deploy-infrastructure.outputs.keyVaultName }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update GitHub Secrets with deployment credentials" >> $GITHUB_STEP_SUMMARY
+          echo "2. Run application deployment workflows" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run database migrations" >> $GITHUB_STEP_SUMMARY

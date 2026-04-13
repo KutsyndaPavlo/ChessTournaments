@@ -1,0 +1,125 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (qa/production)"
+      resourceGroupName:
+        required: true
+        type: string
+        description: "Azure Resource Group name"
+      location:
+        required: false
+        type: string
+        default: "eastus"
+        description: "Azure region for resources"
+    outputs:
+      apiAppServiceName:
+        description: "API App Service name"
+        value: ${{ jobs.deploy-infrastructure.outputs.apiAppServiceName }}
+      identityStaticWebAppName:
+        description: "Identity Static Web App name"
+        value: ${{ jobs.deploy-infrastructure.outputs.identityStaticWebAppName }}
+      frontendStaticWebAppName:
+        description: "Frontend Static Web App name"
+        value: ${{ jobs.deploy-infrastructure.outputs.frontendStaticWebAppName }}
+      keyVaultName:
+        description: "Key Vault name"
+        value: ${{ jobs.deploy-infrastructure.outputs.keyVaultName }}
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      apiAppServiceName: ${{ steps.deploy.outputs.apiAppServiceName }}
+      identityStaticWebAppName: ${{ steps.deploy.outputs.identityStaticWebAppName }}
+      frontendStaticWebAppName: ${{ steps.deploy.outputs.frontendStaticWebAppName }}
+      keyVaultName: ${{ steps.deploy.outputs.keyVaultName }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ inputs.resourceGroupName }} \
+            --location ${{ inputs.location }} \
+            --tags Environment=${{ inputs.environment }} Project=ChessTournaments ManagedBy=GitHub
+
+      - name: Validate Bicep template
+        run: |
+          az deployment group validate \
+            --resource-group ${{ inputs.resourceGroupName }} \
+            --template-file ./infrastructure/bicep/main.bicep \
+            --parameters ./infrastructure/bicep/parameters.${{ inputs.environment }}.json \
+            --parameters sqlAdminLogin=${{ secrets.SQL_ADMIN_LOGIN }} \
+            --parameters sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }} \
+            --parameters oidcApiClientSecret=${{ secrets.OIDC_API_CLIENT_SECRET }}
+
+      - name: Deploy Infrastructure
+        id: deploy
+        run: |
+          DEPLOYMENT_OUTPUT=$(az deployment group create \
+            --resource-group ${{ inputs.resourceGroupName }} \
+            --template-file ./infrastructure/bicep/main.bicep \
+            --parameters ./infrastructure/bicep/parameters.${{ inputs.environment }}.json \
+            --parameters sqlAdminLogin=${{ secrets.SQL_ADMIN_LOGIN }} \
+            --parameters sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }} \
+            --parameters oidcApiClientSecret=${{ secrets.OIDC_API_CLIENT_SECRET }} \
+            --query 'properties.outputs' \
+            --output json)
+
+          echo "Deployment outputs:"
+          echo "$DEPLOYMENT_OUTPUT" | jq '.'
+
+          # Extract outputs
+          API_APP_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.apiAppServiceName.value')
+          IDENTITY_APP_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.identityStaticWebAppName.value')
+          FRONTEND_APP_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.frontendStaticWebAppName.value')
+          KEY_VAULT_NAME=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.keyVaultName.value')
+          API_APP_URL=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.apiAppServiceUrl.value')
+          IDENTITY_APP_URL=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.identityStaticWebAppUrl.value')
+          FRONTEND_APP_URL=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.frontendStaticWebAppUrl.value')
+
+          # Set outputs
+          echo "apiAppServiceName=$API_APP_NAME" >> $GITHUB_OUTPUT
+          echo "identityStaticWebAppName=$IDENTITY_APP_NAME" >> $GITHUB_OUTPUT
+          echo "frontendStaticWebAppName=$FRONTEND_APP_NAME" >> $GITHUB_OUTPUT
+          echo "keyVaultName=$KEY_VAULT_NAME" >> $GITHUB_OUTPUT
+
+          # Display deployment summary
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Resource | Name | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| API App Service | $API_APP_NAME | $API_APP_URL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Identity Static Web App | $IDENTITY_APP_NAME | $IDENTITY_APP_URL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Static Web App | $FRONTEND_APP_NAME | $FRONTEND_APP_URL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Key Vault | $KEY_VAULT_NAME | - |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Configure App Service Deployment
+        run: |
+          API_APP_NAME=$(echo '${{ steps.deploy.outputs.apiAppServiceName }}')
+
+          # Get publishing profile and save to GitHub secrets
+          PUBLISH_PROFILE=$(az webapp deployment list-publishing-profiles \
+            --name $API_APP_NAME \
+            --resource-group ${{ inputs.resourceGroupName }} \
+            --xml)
+
+          echo "Publishing profile retrieved for $API_APP_NAME"
+          echo "⚠️ Save this to GitHub Secrets as AZURE_BACKEND_APP_PUBLISH_PROFILE"
+
+      - name: Azure Logout
+        if: always()
+        run: |
+          az logout

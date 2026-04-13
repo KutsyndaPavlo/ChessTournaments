@@ -1,0 +1,177 @@
+name: Migrate Database
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment (qa/production)"
+
+jobs:
+  apply_migrations:
+    name: Apply Migrations
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.x
+            10.x
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get SQL Server details and configure firewall
+        id: sql-config
+        run: |
+          # Determine resource group based on environment
+          if [ "${{ inputs.environment }}" == "qa" ]; then
+            RESOURCE_GROUP="chess-tournaments-qa-sc-rg"
+          else
+            RESOURCE_GROUP="chess-tournaments-production-rg"
+          fi
+
+          # Get SQL Server name from deployment
+          SQL_SERVER_NAME=$(az sql server list \
+            --resource-group $RESOURCE_GROUP \
+            --query "[0].name" -o tsv)
+
+          echo "SQL Server: $SQL_SERVER_NAME"
+          echo "sql_server_name=$SQL_SERVER_NAME" >> $GITHUB_OUTPUT
+          echo "resource_group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+
+          # Get SQL Server FQDN
+          SQL_SERVER_FQDN=$(az sql server show \
+            --resource-group $RESOURCE_GROUP \
+            --name $SQL_SERVER_NAME \
+            --query "fullyQualifiedDomainName" -o tsv)
+
+          echo "sql_server_fqdn=$SQL_SERVER_FQDN" >> $GITHUB_OUTPUT
+
+          # Get database name
+          DATABASE_NAME=$(az sql db list \
+            --resource-group $RESOURCE_GROUP \
+            --server $SQL_SERVER_NAME \
+            --query "[?name!='master'].name | [0]" -o tsv)
+
+          echo "database_name=$DATABASE_NAME" >> $GITHUB_OUTPUT
+
+          # Get current GitHub Actions runner IP
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "Runner IP: $RUNNER_IP"
+
+          # Add firewall rule for GitHub Actions runner
+          az sql server firewall-rule create \
+            --resource-group $RESOURCE_GROUP \
+            --server $SQL_SERVER_NAME \
+            --name "GitHubActions-${{ github.run_id }}" \
+            --start-ip-address $RUNNER_IP \
+            --end-ip-address $RUNNER_IP
+
+          echo "Firewall rule created for IP: $RUNNER_IP"
+
+      - name: Build connection string
+        id: get-connection-string
+        run: |
+          # Build connection string using SQL Server details and credentials from secrets
+          CONNECTION_STRING="Server=tcp:${{ steps.sql-config.outputs.sql_server_fqdn }},1433;Initial Catalog=${{ steps.sql-config.outputs.database_name }};Persist Security Info=False;User ID=${{ secrets.SQL_ADMIN_LOGIN }};Password=${{ secrets.SQL_ADMIN_PASSWORD }};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+          echo "::add-mask::$CONNECTION_STRING"
+          echo "connection_string=$CONNECTION_STRING" >> $GITHUB_OUTPUT
+
+      - name: Install EF Core CLI
+        run: |
+          dotnet tool restore
+          # Update to latest EF Core tools to match .NET 10 runtime
+          dotnet tool update dotnet-ef --global
+          dotnet ef --version
+
+      - name: Apply Tournaments Module DB Migrations
+        env:
+          PROJECT: "./src/Modules/Tournaments/ChessTournaments.Modules.Tournaments.Infrastructure/ChessTournaments.Modules.Tournaments.Infrastructure.csproj"
+          STARTUP_PROJECT: "./src/ChessTournaments.API/ChessTournaments.API.csproj"
+          CONTEXT: "ChessTournaments.Modules.Tournaments.Infrastructure.Persistence.TournamentsDbContext"
+          CONNECTION_STRING: "${{ steps.get-connection-string.outputs.connection_string }}"
+        run: |
+          dotnet ef database update \
+            --project ${{ env.PROJECT }} \
+            --startup-project ${{ env.STARTUP_PROJECT }} \
+            --context ${{ env.CONTEXT }} \
+            --connection "${{ env.CONNECTION_STRING }}"
+
+      - name: Apply Matches Module DB Migrations
+        env:
+          PROJECT: "./src/Modules/Matches/ChessTournaments.Modules.Matches.Infrastructure/ChessTournaments.Modules.Matches.Infrastructure.csproj"
+          STARTUP_PROJECT: "./src/ChessTournaments.API/ChessTournaments.API.csproj"
+          CONTEXT: "ChessTournaments.Modules.Matches.Infrastructure.Persistence.MatchesDbContext"
+          CONNECTION_STRING: "${{ steps.get-connection-string.outputs.connection_string }}"
+        run: |
+          dotnet ef database update \
+            --project ${{ env.PROJECT }} \
+            --startup-project ${{ env.STARTUP_PROJECT }} \
+            --context ${{ env.CONTEXT }} \
+            --connection "${{ env.CONNECTION_STRING }}"
+
+      - name: Apply Players Module DB Migrations
+        env:
+          PROJECT: "./src/Modules/Players/ChessTournaments.Modules.Players.Infrastructure/ChessTournaments.Modules.Players.Infrastructure.csproj"
+          STARTUP_PROJECT: "./src/ChessTournaments.API/ChessTournaments.API.csproj"
+          CONTEXT: "ChessTournaments.Modules.Players.Infrastructure.Persistence.PlayersDbContext"
+          CONNECTION_STRING: "${{ steps.get-connection-string.outputs.connection_string }}"
+        run: |
+          dotnet ef database update \
+            --project ${{ env.PROJECT }} \
+            --startup-project ${{ env.STARTUP_PROJECT }} \
+            --context ${{ env.CONTEXT }} \
+            --connection "${{ env.CONNECTION_STRING }}"
+
+      - name: Apply TournamentRequests Module DB Migrations
+        env:
+          PROJECT: "./src/Modules/TournamentRequests/ChessTournaments.Modules.TournamentRequests.Infrastructure/ChessTournaments.Modules.TournamentRequests.Infrastructure.csproj"
+          STARTUP_PROJECT: "./src/ChessTournaments.API/ChessTournaments.API.csproj"
+          CONTEXT: "ChessTournaments.Modules.TournamentRequests.Infrastructure.Persistence.TournamentRequestsDbContext"
+          CONNECTION_STRING: "${{ steps.get-connection-string.outputs.connection_string }}"
+        run: |
+          dotnet ef database update \
+            --project ${{ env.PROJECT }} \
+            --startup-project ${{ env.STARTUP_PROJECT }} \
+            --context ${{ env.CONTEXT }} \
+            --connection "${{ env.CONNECTION_STRING }}"
+
+      - name: Apply Identity DB Migrations
+        env:
+          PROJECT: "./src/ChessTournaments.Identity/ChessTournaments.Identity.csproj"
+          STARTUP_PROJECT: "./src/ChessTournaments.Identity/ChessTournaments.Identity.csproj"
+          CONTEXT: "ChessTournaments.Identity.Database.ApplicationDbContext"
+          CONNECTION_STRING: "${{ steps.get-connection-string.outputs.connection_string }}"
+        run: |
+          dotnet ef database update \
+            --project ${{ env.PROJECT }} \
+            --startup-project ${{ env.STARTUP_PROJECT }} \
+            --context ${{ env.CONTEXT }} \
+            --connection "${{ env.CONNECTION_STRING }}"
+
+      - name: Remove firewall rule
+        if: always()
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group ${{ steps.sql-config.outputs.resource_group }} \
+            --server ${{ steps.sql-config.outputs.sql_server_name }} \
+            --name "GitHubActions-${{ github.run_id }}" \
+            --yes || true
+
+      - name: Azure Logout
+        if: always()
+        run: |
+          az logout

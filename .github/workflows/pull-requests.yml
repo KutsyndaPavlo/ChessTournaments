@@ -1,0 +1,24 @@
+name: Pull Requests
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-backend:
+    name: Build Backend
+    uses: ./.github/workflows/_build-backend.yml
+    with:
+      environment: qa
+      run_tests: true
+
+  build-frontend:
+    name: Build Frontend
+    needs: build-backend
+    uses: ./.github/workflows/_build-frontend.yml
+    with:
+      environment: qa
+      upload_artifacts: false
