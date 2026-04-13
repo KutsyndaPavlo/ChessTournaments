@@ -40,10 +40,7 @@ builder.Services.AddApplicationSettings(builder.Configuration);
 builder.Services.AddCorsConfiguration();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
-builder.Services.AddIdentityConfiguration(
-    identitySettings,
-    accountSettings
-);
+builder.Services.AddIdentityConfiguration(identitySettings, accountSettings);
 builder.Services.AddExternalAuthentication(externalLoginMicrosoftSettings);
 builder.Services.AddOpenIddictConfiguration(
     oidcSettings,
